@@ -1,0 +1,6 @@
+ //域名一样
+   //localStorage 的值改变
+    window.addEventListener('storage', e => {
+      console.log(e)
+      const { newValue, oldValue } = e
+    })
