@@ -1,0 +1,14 @@
+componentDidMount() {
+        const home = document.querySelector('.home-mid')
+        this.fn = _.throttle(e => { //节流
+            localStorage.setItem('scroll', e.target.scrollTop)
+        }, 200)
+ 
+        home.addEventListener('scroll', this.fn)
+ 
+        if (localStorage.getItem('scroll')) {
+            setTimeout(() => {
+                home.scrollTop = localStorage.getItem('scroll')
+            }, 2000)
+        }
+    }
