@@ -1,0 +1,14 @@
+下载文档
+    onDown = () => {
+        const { dataTable } = this.props
+        const blob = new Blob([JSON.stringify(dataTable)], { type: 'application/json' })
+        let a = document.createElement("a")
+        let url = URL.createObjectURL(blob)
+        a.href = url
+        a.download = '自定义文件名'
+        a.click()
+        setTimeout(() => {
+            // 删除创建的URL
+            window.URL.revokeObjectURL(url)
+        }, 0)
+    }
