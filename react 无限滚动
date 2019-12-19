@@ -1,0 +1,27 @@
+import InfiniteScroll from 'react-infinite-scroller'
+import axios from 'axios'
+
+
+loadFunc = () => {
+	const { data, count } = this.state
+	if (count && data.length >= count) {
+     	return false
+	}
+	axios.get()
+    	.then(res => {
+         this.setState({
+            count: res.count,
+            data: [...data, ...res.pois]
+       })
+   })
+}
+
+<InfiniteScroll
+    loadMore={this.loadFunc}
+    hasMore={hasmore}
+    loader={<div className="loader" key={0}><Spin /></div>}
+    useWindow={false}
+    initialLoad={false}
+>
+  { data }
+</InfiniteScroll>
