@@ -1,0 +1,34 @@
+   * 1 *  apply,call,bind有什么区别
+                                            
+    三者都可以把一个函数应用到其他对象上，apply,call是直接执行函数调用，bind是绑定，执行需要再次调用。
+    apply和call的区别是apply接受数组作为参数，而call是接受逗号分隔的无限多个参数列表。
+ 
+    function Person() {}
+    Person.prototype.sayName() { alert(this.name); }
+ 
+    var obj = {name: 'michaelqin'}; // 注意这是一个普通对象，它不是Person的实例
+    // 1) apply
+    Person.prototype.sayName.apply(obj, [param1, param2, param3]);
+ 
+    // 2) call
+    Person.prototype.sayName.call(obj, param1, param2, param3);
+ 
+    // 3) bind
+    var liaoke = Person.prototype.sayName.bind(obj);    
+    liaoke ([param1, param2, param3]); // bind需要先绑定，再执行 
+    liaoke (param1, param2, param3); // bind需要先绑定，再执行
+ 
+  * 2 *  keep-alive的作用是什么
+    <keep-alive></keep-alive> // 包裹动态组件时，会缓存不活动的组件实例,主要用于保留组件状态或避免重新渲染
+  
+  * 3 * v-if、v-show
+        手段：v-if是动态的向DOM树内添加或者删除DOM元素；v-show是通过设置DOM元素的display样式属性控制显隐；
+        编译过程：v-if切换有一个局部编译/卸载的过程，切换过程中合适地销毁和重建内部的事件监听和子组件；v-show只是简单的基于css切换；
+        编译条件：v-if是惰性的，如果初始条件为假，则什么也不做；只有在条件第一次变为真时才开始局部编译（编译被缓存后，然后再切换的时候进行局部卸载); 
+                 v-show是在任何条件下（首次条件是否为真）都被编译，然后被缓存，而且DOM元素保留；
+        性能消耗：v-if有更高的切换消耗；v-show有更高的初始渲染消耗
+  
+  * 4 * bootstrapt实现响应式的原理
+        Bootstrap采取12列的栅格体系，根据主流设备的尺寸进行分段，每段宽度固定，通过百分比和媒体查询实现响应式布局。
+    
+  * 5 *
