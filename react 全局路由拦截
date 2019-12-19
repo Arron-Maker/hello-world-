@@ -1,0 +1,75 @@
+import React from 'react'
+import { Route, withRouter } from 'react-router-dom'
+ 
+/**
+ * 统一路由监听
+ * 登录后不做任何处理 未登录跳转到登录页
+ */
+export default @withRouter
+class extends React.PureComponent {
+  constructor (props) {
+    super(props)
+    this.redirect(props)
+  }
+  
+  // nextProps
+  componentWillReceiveProps (np) {
+    this.redirect(np)
+  }
+ 
+  // 重定向
+  redirect = np => {
+    const { history } = np
+ 
+    // 判断是否登录了
+    if (!localStorage.getItem('token')) {
+      const pathname = history.location.pathname
+      // 如果是登录页 不跳转 否则会死循环
+      if (!pathname.includes('login')&& !pathname.includes('reg')) {
+        history.push('/login')
+      }
+    }
+  }
+ 
+  render () {
+    const { path, component } = this.props
+    return <Route path={path} component={component} />
+  }
+}
+ 
+ 
+/* 引用 */
+ 
+import loader from './utils/loader' //路由懒加载
+import PrivateRoute from './components/PrivateRoute'  //全局路由拦截
+ 
+const Details = loader(()=>import ('./pages/details'))
+const Register = loader(()=>import ('./pages/register'))
+ 
+export default class Router extends React.Component {
+    render() {
+        return (
+            <BrowserRouter>
+                <Switch>
+                    <PrivateRoute path='/reg' component={Register} />
+                    <PrivateRoute path='/goods' component={Details} />
+                </Switch>
+            </BrowserRouter>
+        )
+    }
+}
+ 
+/*  loader.jsx  */
+ 
+import React from 'react'
+import Loadable from 'react-loadable'
+import { ActivityIndicator, } from 'antd-mobile'
+ 
+const loadingC = () => <ActivityIndicator toast text="Loading..."/>
+ 
+export default (loader, loading = loadingC) =>{
+    return Loadable({
+        loader,
+        loading
+    })
+}
