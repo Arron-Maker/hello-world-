@@ -1,0 +1,45 @@
+/* css3动画 */
+CSS3变形–旋转 rotate()
+CSS3中的变形–扭曲 skew()
+CSS3中的变形–缩放 scale()
+CSS3中的变形–位移 translate()
+CSS3中的变形–原点 transform-origin
+CSS3中的动画:translation
+Css3自定义动画Keyframes和animation
+animation-direction:动画播放方向
+animation-play-state属性主要用来控制元素动画的播放状态
+
+* CSS3 结构性伪类选择器—root
+:root选择器，从字面上我们就可以很清楚的理解是根选择器，他的意思就是匹配元素E所在文档的根元素。在HTML文档中，根元素始终是。
+:root {
+background:orange;
+}
+* CSS3 结构性伪类选择器—not
+:not选择器称为否定选择器，和jQuery中的:not选择器一模一样，可以选择除某个元素之外的所有元素。就拿form元素来说，比如说你想给表单中除submit按钮之外的input元素添加红色边框，CSS代码可以写成：
+input:not([type=“submit”]){
+border:1px solid red;
+}
+* CSS3 结构性伪类选择器—empty
+:empty选择器表示的就是空。用来选择没有任何内容的元素，这里没有内容指的是一点内容都没有，哪怕是一个空格
+* CSS3 结构性伪类选择器—target
+:target选择器称为目标选择器，用来匹配文档(页面)的url的某个标志符的目标元素,当a标签被点击后，它的target元素的样式
+* CSS3 结构性伪类选择器—first-child
+“:first-child”选择器表示的是选择父元素的第一个子元素的元素E。简单点理解就是选择元素中的第一个子元素，记住是子元素，而不是后代元素
+* CSS3 结构性伪类选择器—last-child
+“:last-child”选择器与“:first-child”选择器作用类似，不同的是“:last-child”选择器选择的是元素的最后一个子元素。例如，需要改变的是列表中的最后一个“li”的背景色，就可以使用这个选择器，
+ul>li:last-child{background:blue;}
+* CSS3 结构性伪类选择器—nth-child(n)
+* CSS3 结构性伪类选择器—nth-last-child(n)
+* CSS3 first-of-type选择器
+“:first-of-type”选择器类似于“:first-child”选择器，不同之处就是指定了元素的类型,其主要用来定位一个父元素下的某个类型的第一个子元素（算index的时候就不用算其它元素）,这里的类型是指html标签的类型(比如div,p)，如果是class名也通过class名去看容器的类型是什么类型，该类型的第一位是不是有该class，没有就不符合，有就符合，下面的last-of-type和nth-of-type(n)以及nth-last-of-type(n)，only-of-type都是同样的道理
+* CSS3 last-of-type选择器
+* CSS3 nth-of-type(n)选择器
+* CSS3 nth-last-of-type(n)选择器
+* CSS3 only-child选择器
+“:only-child”选择器选择的是父元素中只有一个子元素，而且只有唯一的一个子元素。也就是说，匹配的元素的父元素中仅有一个子元素，而且是一个唯一的子元素
+* CSS3 only-of-type选择器
+“:only-of-type”选择器选择的元素是其父元素中唯一的一个该类型的子元素(同一级的)
+* CSS3选择器 ::selection选择器
+“::selection”伪元素是用来匹配突出显示的文本(用鼠标选择文本时的文本)。浏览器默认情况下
+* CSS3选择器 ::before和::after
+ 
