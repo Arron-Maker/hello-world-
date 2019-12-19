@@ -1,0 +1,10 @@
+@Form.create({
+  mapPropsToFields(props) {
+    return Object.entries(props.editData).reduce((v0, [k, v]) => {
+      v0[k] = Form.createFormField({
+        value: v,
+      })
+      return v0
+    }, {})
+  },
+})
