@@ -1,0 +1,116 @@
+import React, { Component } from 'react'
+import Masonry from 'masonry-layout'
+import InfiniteScroll from 'react-infinite-scroller'
+import axios from 'axios'
+import imagesLoaded from 'imagesloaded'
+import cs from 'classnames'
+import './style.less'
+ 
+const arr = [
+    'https://dss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3008142408,2229729459&fm=26&gp=0.jpg',
+    'https://dss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3437217665,1564280326&fm=26&gp=0.jpg',
+    'https://dss0.bdstatic.com/70cFvHSh_Q1YnxGkpoWK1HF6hhy/it/u=2458227883,4095122505&fm=26&gp=0.jpg',
+    'https://dss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=1761250919,1896060533&fm=26&gp=0.jpg',
+    'https://dss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=2852083094,372235004&fm=26&gp=0.jpg',
+    'https://dss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=2944705163,3932100810&fm=26&gp=0.jpg',
+    'https://dss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3104686528,572431609&fm=26&gp=0.jpg',
+]
+ 
+ 
+export default class extends Component {
+    constructor(props) {
+        super(props)
+        this.state = {
+            hasmore: true,
+            count: 0,
+            data: []
+        }
+        this.loadFunc()
+    }
+ 
+    imagesOnload = () => {
+        const elLoad = imagesLoaded('.pages-hoc')
+        elLoad.on('always',() => {
+            this.advanceWidth()
+            console.log('加载完成')
+        })
+    }
+    
+    advanceWidth = () => {
+ 
+        // new Masonry(节点, 配置)
+        new Masonry(document.querySelector('.pages-hoc'), {
+            itemSelector: '.d', // 要布局的网格元素
+            columnWidth: 200,  // 获取节点 可以自动计算每列的宽度
+            fitWidth: true, // 设置网格容器宽度等于网格宽度
+            gutter: 20,
+        })
+    }
+ 
+    loadFunc = (page = 1) => {
+        const { data, count } = this.state
+        if (count && data.length >= count) {
+            return false
+        }
+        axios.post('/Home/Apis/listWithPage', { data: { page, limit: 10 } })
+            .then(res => {
+                console.log(res)
+                this.setState({
+                    count: res.count,
+                    data: [...data, ...arr]
+                }, () => {
+                    this.imagesOnload()
+                })
+            })
+    }
+    render() {
+        const { hasmore, data } = this.state
+        return (
+            <div className='box'>
+                <InfiniteScroll
+                    loadMore={this.loadFunc}
+                    hasMore={hasmore}
+                    loader={<div className="loader" key={0}>loading...</div>}
+                    useWindow={false}
+                    initialLoad={false}
+                >
+                    <div className='pages-hoc'>
+                        {
+                            data.length > 0 && data.map((v, k) => (
+                                <div key={k} className={cs('d', { d1: k % 2 === 0, d2: k % 2 !== 0 })}>
+                                    <img src={v} key={k}/>
+                                </div>
+                            ))
+                        }
+                    </div>
+                </InfiniteScroll>
+            </div>
+        )
+    }
+}
+ 
+style.less
+#root,html,body{
+    height: 100%;
+}
+.box{
+    height: 100%;
+    box-sizing: border-box;
+    overflow: auto; 
+}
+.pages-hoc {
+  margin: 0 auto;
+    img{
+      width: 3rem;
+    }
+  .d {
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .d1 {
+      background: #D26;
+    }
+    .d2 {
+      background: #D26;
+    }
+  }
