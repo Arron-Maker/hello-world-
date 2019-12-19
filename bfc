@@ -1,0 +1,76 @@
+1)两栏布局  //最后一个盒子加overflow:hidden
+ 
+<style>
+        .box{
+        width:200px;
+   height:100px;
+}
+.rule{
+        width:50px;
+   height:50px;
+   background:red;
+}
+.aside{
+        width:50px;
+   height:50px;
+   background:green;
+   overflow:hidden;
+}
+</style>
+ 
+<body>
+        <div class="box">
+                <div class="rule"></div>
+                <div class="aside"></div>
+        </div>
+</body>
+ 
+ 
+清除浮动  //父级元素加 overflow:hidden
+<style>
+    .box {
+        width: 300px;
+        border: 5px solid red;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+ 
+    .aside {
+        width: 50px;
+        background: green;
+        height: 50px;
+        float: left;
+    }
+</style>
+ 
+<body>
+    <div class="box">
+        <div class="aside"></div>
+        <div class="aside"></div>
+    </div>
+</body>
+ 
+防止margin重叠 //两者之间添加一个盒子 overflow:hiddden
+<style>
+    .aside{
+        width: 50px;
+        height: 50px;
+        margin: 10px 0;
+        background: red;
+    }
+ 
+    .rule{
+        overflow: hidden;
+    }
+ 
+    
+</style>
+ 
+<body>
+    <div class="box">
+        <div class="aside"></div>
+        <div class="rule"></div>
+        <div class="aside"></div>
+    </div>
+    
+</body>
