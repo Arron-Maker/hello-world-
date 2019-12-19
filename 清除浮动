@@ -1,0 +1,4 @@
+ * 在结尾处添加空div标签clear：both
+ * 父级div定义display:table
+ * 父级div也一起浮动
+ * &:after 清除内浮动 // 给父级加 overflow:auto/hidden //
