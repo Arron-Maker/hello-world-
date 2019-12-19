@@ -1,0 +1,1 @@
+qs.parse(参数, { ignoreQueryPrefix: true })
