@@ -1,0 +1,5 @@
+const arr = [...data]
+
+arr.sort((a, b) => {
+    return b.price - a.price
+})
