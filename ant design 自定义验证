@@ -1,0 +1,17 @@
+    validFunction = (rule, value, callback) => {
+        const reg = /([0-9]+[a-zA-Z]+|[a-zA-Z]+[0-9]+)[0-9a-zA-Z]*/
+        if (value && !value.match(reg)) {
+            callback('必须包含数字和字母！')
+        }
+        callback()
+    }
+    
+    rules: [
+           {
+              validator: this.validatorFun
+           },
+                {
+                        required: true,
+                        message: '请输入标题 !',
+           },
+        ],
