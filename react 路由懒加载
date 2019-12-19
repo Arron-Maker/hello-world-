@@ -1,0 +1,15 @@
+//loader.js
+import React from 'react'
+import Loadable from 'react-loadable'
+ 
+const loadingC = () => <div>loading</div>
+ 
+export default (loader, loading = loadingC) =>{
+    return Loadable({
+        loader,
+        loading
+    })
+}
+ 
+在有 Route 匹配组件的页面 引入
+const Home = loader(()=>import ('./pages/home'))
