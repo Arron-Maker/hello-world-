@@ -1,0 +1,98 @@
+import React, { Component } from 'react'
+import Masonry from 'masonry-layout'
+import InfiniteScroll from 'react-infinite-scroller'
+import axios from 'axios'
+import cs from 'classnames'
+import './style.less'
+
+export default class extends Component {
+    constructor(props) {
+        super(props)
+        this.state = {
+            hasmore: true,
+            count: 0,
+            data: []
+        }
+        this.loadFunc()
+    }
+
+    advanceWidth = () => {
+
+        // new Masonry(节点, 配置)
+        new Masonry(document.querySelector('.pages-hoc'), {
+            itemSelector: '.d', // 要布局的网格元素
+            columnWidth: 200,  // 获取节点 可以自动计算每列的宽度
+            fitWidth: true, // 设置网格容器宽度等于网格宽度
+            gutter: 20,
+        })
+    }
+
+    loadFunc = (page = 1) => {
+        const { data, count } = this.state
+        if (count && data.length >= count) {
+            return false
+        }
+        axios.post('/Home/Apis/listWithPage', { data: { page, limit: 10 } })
+            .then(res => {
+                console.log(res)
+                this.setState({
+                    count: res.count,
+                    data: [...data, ...res.data.result.list]
+                }, () => {
+                    this.advanceWidth()
+                })
+            })
+    }
+    render() {
+        const { hasmore, data } = this.state
+        return (
+            <div className='box'>
+                <InfiniteScroll
+                    loadMore={this.loadFunc}
+                    hasMore={hasmore}
+                    loader={<div className="loader" key={0}>loading...</div>}
+                    useWindow={false}
+                    initialLoad={false}
+                >
+                    <div className='pages-hoc'>
+                        {
+                            data.length > 0 && data.map((v, k) => (
+                                <div key={k} className={cs('d', { d1: k % 2 === 0, d2: k % 2 !== 0 })}>
+
+                                </div>
+                            ))
+                        }
+                    </div>
+                </InfiniteScroll>
+            </div>
+        )
+    }
+}
+
+
+style.less
+
+#root,html,body{
+    height: 100%;
+}
+.box{
+    height: 100%;
+    box-sizing: border-box;
+    overflow: auto; 
+}
+.pages-hoc {
+    margin: 0 auto;
+    .d {
+      width: 200px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .d1 {
+      height: 200px;
+      background: #D26;
+    }
+    .d2 {
+      height: 300px;
+      background: #D26;
+    }
+  }
