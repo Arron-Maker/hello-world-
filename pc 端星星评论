@@ -1,0 +1,40 @@
+import React, { Component } from 'react'
+import './style.less'
+ 
+export default class extends Component {
+    state = {
+        score: 3.4
+    }
+    stars = () => {
+        const { score } = this.state
+        const num = score * 10
+        let ten = parseInt(num / 10)
+        const ge = num % 10
+        if (ge >= 5) {
+            ten = ten + 0.5
+        }
+        return `${ten / 5 * 100}%`
+    }
+    render() {
+        const arr = new Array(5).fill(4)
+        return (
+            <div className='reg-box' style={{width:'21%',position:'relative'}}>
+                <ul style={{ color: 'red', display: 'flex', position: 'absolute', top: 0, left: 0, zIndex: 1, overflow: 'hidden', width: `${this.stars()}` }}>
+                    {
+                        arr.map((v, k) => (
+                            <li key={k} className='iconfont icon-shouji'></li>
+                        ))
+                    }
+                </ul>
+                <ul style={{ display: 'flex',  }}>
+                    {
+                        arr.map((v, k) => (
+                            <li key={k} className='iconfont icon-shouji'></li>
+                        ))
+                    }
+                </ul>
+            </div>
+        )
+    }
+}
+ 
