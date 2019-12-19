@@ -1,0 +1,4 @@
+import { withRouter } from 'react-router-dom'
+ 
+const pathname = this.props.location.pathname
+const key = pathname === '/' ? pathname : pathname.replace('/', '')
