@@ -1,0 +1,11 @@
+* 传参
+  /* Route :id
+     Link 参数 */  this.props.location
+  
+
+* 回退
+  replace
+  this.props.history.replace('/')
+  
+* 回退上一级
+  路由Link 都加 replace 默认为true,可省略 
