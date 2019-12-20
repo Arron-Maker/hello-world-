@@ -1,0 +1,21 @@
+import React, { Component } from 'react'
+import { Link } from "react-router-dom"
+import { Breadcrumb } from 'antd'
+
+export default class extends Component {
+    render() {
+        const { data } = this.props
+        return (
+            <Breadcrumb>
+                {
+                    data.map((v, k) => (
+                        <Breadcrumb.Item key={k}>
+                            <Link to={v.link}>{v.name}</Link>
+                        </Breadcrumb.Item>
+                    ))
+                }
+            </Breadcrumb>
+        )
+    }
+}
+
