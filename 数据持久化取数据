@@ -1,0 +1,3 @@
+store.js
+window.store=store
+用的时候 window.store.getState()
