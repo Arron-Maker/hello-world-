@@ -1,0 +1,20 @@
+constructor(props) {
+        super(props)
+        this.props.table({ page: 1, limit: 3 })
+    }
+
+onChange = pagination => {
+    const { current } = pagination
+    this.props.table({ page: current, limit: 3 })
+}
+<Table
+    columns={columns} //标题名
+    dataSource={list} //渲染的数据
+    rowKey={v => v.id} //key值
+    onChange={this.onChange} //change事件
+    pagination={{
+        pageSize:10,  //每页显示的条数
+        defaultCurrent:1, //默认显示一页
+        total:Number(count) //全部的数据length
+    }}
+/>
