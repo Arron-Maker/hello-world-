@@ -1,0 +1,14 @@
+<Form.Item label="上传图片">
+    {getFieldDecorator('upload', {
+        valuePropName: 'fileList',
+        getValueFromEvent: this.normFile,
+    })(
+        <Upload name="file" action="api/uploadFile" listType="picture">
+            <Button>
+                <Icon type="upload" /> 点击上传
+            </Button>
+        </Upload>,
+    )}
+</Form.Item>
+
+bannerUrl: values.upload[0].response.data.url  //获取路径
