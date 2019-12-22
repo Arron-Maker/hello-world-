@@ -11,6 +11,9 @@
     }
 }
 
+err = e => {
+    e.target.setAttribute('src', defaultImage)
+}
 //图片异常显示默认图片
 {
   title: '图片',
