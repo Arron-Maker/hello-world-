@@ -1,5 +1,5 @@
     validFunction = (rule, value, callback) => {
-        const reg = /([0-9]+[a-zA-Z]+|[a-zA-Z]+[0-9]+)[0-9a-zA-Z]{6,}*/img //长度必须大于6位
+         const reg = /^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{8,16}$/ig //长度必须大于6位
         if (value && !value.match(reg)) {
             callback('必须包含数字和字母！')
         }
@@ -8,7 +8,7 @@
     
     rules: [
            {
-              validator: this.validatorFun
+              validator: this.validFunction
            },
                 {
                         required: true,
