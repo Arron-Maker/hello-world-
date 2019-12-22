@@ -20,3 +20,47 @@ err = e => {
   dataIndex: 'bannerUrl',
   render: item => <img src={item} onError={this.err} />,
 },
+
+//menu菜单
+class Sider extends Component {
+    state = {
+        current: '/',
+    }
+
+    handleClick = e => {
+        this.setState({
+            current: e.key,
+        })
+        this.props.history.push(e.key)
+    }
+
+    render() {
+        const pathname = this.props.location.pathname
+        return (
+            <div className='page_menu'>
+                <Menu
+                    theme='dark'
+                    onClick={this.handleClick}
+                    style={{ width: 256 }}
+                    selectedKeys={[pathname]}
+                    mode="inline"
+                >
+                    <Menu.Item key="/"><Icon type="mail" />首页</Menu.Item>
+                    <SubMenu
+                        key="/tables"
+                        title={
+                            <span>
+                                <Icon type="setting" />
+                                <span>面试题管理</span>
+                            </span>
+                        }
+                    >
+                        <Menu.Item key="/basic">Basic Table</Menu.Item>
+                        <Menu.Item key="/datatables">Datatables</Menu.Item>
+                        <Menu.Item key="/echarts">Echarts</Menu.Item>
+                    </SubMenu>
+                </Menu>
+            </div>
+        )
+    }
+}
