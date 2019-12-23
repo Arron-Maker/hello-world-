@@ -3,7 +3,7 @@
         valuePropName: 'fileList',
         getValueFromEvent: this.normFile,
     })(
-        <Upload name="file" action="api/uploadFile" listType="picture">
+        <Upload name="file" action="api/uploadFile" listType="picture"> //name是后台提供的
             <Button>
                 <Icon type="upload" /> 点击上传
             </Button>
