@@ -1,0 +1,5 @@
+package.json rules
+
+"rules": {
+    "no-console": "off"
+}
