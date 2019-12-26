@@ -1,0 +1,109 @@
+<template>
+  <!-- v-bind的使用 -->
+  <div :class="{active: isActive}">
+    111
+
+    <!-- v-if的使用 -->
+    <div v-if="isTrue === 1">true</div>
+    <div v-else-if="isTrue === 2">false</div>
+    <div v-else>isTrue</div>
+
+    <!-- v-show的使用 -->
+    <h1 v-show="show">你被发现了</h1>
+
+    <!-- v-for的使用 -->
+    <!-- <div v-for="item in data" :key="item.id">{{item.name}}</div> -->
+
+    <!-- v-if 配合 v-for 的使用 -->
+    <div v-for="item in data" :key="item.id">
+      <p v-if="!item.active">{{item.name}}</p>
+    </div>
+
+    <!-- v-click 按键修饰符 -->
+    <div @click.once="click($event)">
+      风也有烦恼
+      <a href="https://www.baidu.com" @click.prevent="stop">百度一下你就知道</a>
+    </div>
+    <!-- v-model 双向绑定 -->
+    <input type="text" v-model="message"><span>{{message}}</span>
+    <!-- checkbox组 -->
+    <input type="checkbox" value="篮球" v-model="checkbox" id="jack">
+    <label for="jack">篮球</label>
+    <input type="checkbox" value="足球" v-model="checkbox" id="mom">
+    <label for="mom">足球</label>
+    <input type="checkbox" value="排球" v-model="checkbox" id="dad">
+    <label for="dad">排球</label>
+    <p>{{checkbox}}</p>
+
+    <!-- select -->
+    <!-- <select v-model="selected">
+      <option>A</option>
+      <option>B</option>
+      <option>C</option>
+    </select>
+    <br>
+    <span>Selected: {{ selected }}</span> -->
+
+    <!-- select 循环 -->
+    <select v-model="selected">
+      <option
+        v-for="option in data"
+        :value="option.id"
+        :key="option.id"
+      >
+        {{ option.name }}
+      </option>
+    </select>
+    <span>Selected: {{ selected }}</span>
+    <br />
+    <!-- 单选框 -->
+    <input type="radio" v-model="pick" value="男" id="man">
+    <label for="man">男</label>
+    <input type="radio" v-model="pick" value="女" id="woman">
+    <label for="woman">女</label>
+    <span>radio: {{pick}}</span>
+
+    <!-- .number -->
+    <input type="number" v-model.number="num">
+    <span>number: {{typeof num}}</span>
+  </div>
+</template>
+
+<script>
+import './style.less'
+
+export default {
+  data () {
+    return {
+      isActive: true,
+      isTrue: 4,
+      show: true,
+      data: [
+        {
+          id: 1,
+          name: 'A',
+          active: true
+        },
+        {
+          id: 2,
+          name: 'B',
+          active: true
+        }
+      ],
+      message: '',
+      checkbox: [],
+      selected: [],
+      pick: [],
+      num: ''
+    }
+  },
+  methods: {
+    click (item) {
+      console.log(item)
+    },
+    stop () {
+      console.log('百度一下，你就知道')
+    }
+  }
+}
+</script>
