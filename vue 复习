@@ -107,3 +107,33 @@ export default {
   }
 }
 </script>
+
+ **** // 父子传参
+ **** <Button data="mouth" @handleClick="click" /> //动态值使用v-bind绑定
+ 
+ **** //子组件往父组件传值
+ <template>
+  <div class="commit-button">
+      <button @click="onClick">风也有烦恼</button>
+      <p>{{data}}</p>
+  </div>
+</template>
+
+<script>
+  export default {
+    props: ['data'],
+    data () {
+      return {
+        arr: [1, 2, 3]
+      }
+    },
+    methods: {
+      onClick () {  //handleClick跟父组件绑定的handleClick是一样的 在父组件调用这个
+        this.$emit('handleClick', this.arr)
+      }
+    }
+  }
+</script>
+
+
+**** // 
