@@ -180,3 +180,20 @@ module.exports = {
   //引用                     //设置一个别名，在network.js 下边可以清楚的找到对应的
   const Home = () => import(/* webpackChunkName: "home" */ '@/pages/home')
 
+* 全局路由守卫 *
+const router = new VueRouter({
+  mode: 'history',
+  routes
+})
+
+router.beforeEach((to, from, next) => {
+  if (!localStorage.token) { //先判断登没登陆
+    if (to.path === '/login' || to.path === '/reg') { //再判断现在的页面是否是login或reg 如果是 就next()
+      next()
+    } else {
+      next('/login')  // 不是登录页就让它跳转到登录页
+    }
+  } else {
+    next()
+  }
+})
