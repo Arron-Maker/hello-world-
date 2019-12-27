@@ -136,4 +136,47 @@ export default {
 </script>
 
 
-**** // 
+**** // 路由传参
+*第一种* 函数模式
+{
+  path: '/btn',
+  component: Button,
+  props: (route) => ({ query: route.query.name })
+}
+<router-link to="/btn/?name=张三">btn-1</router-link>
+//获取
+props: ['query']  {{query}}
+*第二种*
+{
+  path: '/btn/:id',
+  component: Button,
+  props: true
+}
+<router-link to="/btn/2">btn-1</router-link>
+//获取
+props: ['id']  {{id}}
+//监听
+第一次在mounted中可以监听到
+第二次在updated中可以监听到
+
+****  // 路由懒加载 组件懒加载
+cnpm i babel-plugin-component -S
+npm install --save-dev @babel/plugin-syntax-dynamic-import
+babel.config.js 替换
+module.exports = {
+    presets: [
+      '@vue/cli-plugin-babel/preset',
+    ],
+    "plugins": [
+      [
+        "component", {
+          "libraryName": "mint-ui",
+          "style": true
+        },
+        "@babel/plugin-syntax-dynamic-import"
+      ],
+    ]
+  }
+  //引用                     //设置一个别名，在network.js 下边可以清楚的找到对应的
+  const Home = () => import(/* webpackChunkName: "home" */ '@/pages/home')
+
