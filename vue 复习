@@ -199,3 +199,16 @@ router.beforeEach((to, from, next) => {
     next()
   }
 })
+
+* 按需加载element *
+utils/element.js
+/*
+  import Vue from 'vue'
+  import {
+    Button
+  } from 'element-ui'
+  Vue.use(Button)
+*/
+在main.js中引入utils/element.js
+
+
