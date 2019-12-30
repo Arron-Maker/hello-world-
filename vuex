@@ -61,27 +61,48 @@ computed: mapState([
 //actions
 const store = new Vuex.Store({
   state: {
-    name: '张三',
-    data: []
+    tableData: [],
+    rulei: []
   },
 
   // 触发变更
   mutations: {
-    setData (state, action) {
-      state.data = action
+    [GET_TABLE_DATA] (state, action) {
+      state.tableData = action.data
+    },
+    [GET_RULEI_LIST] (state, action) {
+      state.rulei = action.data
     }
   },
   actions: {
-    onIncrement (context) {
-      post('/Home/Apis/listWithPage')
+    [ON_TABLE] ({ commit }) {
+      TableData({ username: 'admin', password: 'admin', token: localStorage.token })
         .then(res => {
-          context.commit('setData', res)
+          commit(GET_TABLE_DATA, res)
+        })
+    },
+    [ON_ROOT] ({ commit }) {
+      RULEI({ token: localStorage.token })
+        .then(res => {
+          commit(GET_RULEI_LIST, res.data)
         })
     }
   }
 })
 
-store.dispatch('onIncrement')
+store.dispatch(ON_ROOT)
+
+* module *
+modules: { // 创建多个， 跟reducer合并类似
+  table,
+}
+store.commit('table/GET_TABLE_DATA', 111) // 触发table下的变更
+this.$store.dispatch(`table/${ON_TABLE}`) // 触发table下的action
+/* 公共的只需要把前边的table去掉就可以了 */
+computed: {
+    ...mapState('table', ['name'])  // 获取table下的name
+},
+
 
 //代理
 devServer: {
@@ -94,5 +115,16 @@ devServer: {
         '^/api': ''
       }
     }
+  }
+}
+
+* input 绑定的值在vuex中 实施的改变监听 *
+<input type="text" :value="price" @input="message">
+methods: {
+  ...maoState({
+    message: state => state.obj.message
+  })
+  message (evt) {
+    this.$store.commit('updateMessage', e.target.value)
   }
 }
