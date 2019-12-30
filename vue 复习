@@ -110,6 +110,7 @@ export default {
 
  **** // 父子传参
  **** <Button data="mouth" @handleClick="click" /> //动态值使用v-bind绑定
+ **** 传方法  <Button :click="click"/> 获取props['click'] 使用 @click="click"
  
  **** //子组件往父组件传值
  <template>
