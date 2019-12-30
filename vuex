@@ -128,3 +128,29 @@ methods: {
     this.$store.commit('updateMessage', e.target.value)
   }
 }
+* vuex数据持久化 *
+// vuex数据持久化
+plugins: [createPersistedState({
+  key: 'rootPersisted', // 配置一个别名
+  storage: window.sessionStorage, // 默认存到localStorage
+  reducer (options) { // options返回的是state下的值
+    return {
+      tableData: options.tableData // 把需要的值存起来
+    }
+  }
+})]
+//module 返回的层级对应上
+modules: {
+    login,
+},
+plugins: [createPersistedState({
+  key: 'rootPersisted',
+  storage: window.sessionStorage,
+  reducer (options) {
+    return {
+      login: {
+        price: options.login.price
+      }
+    }
+  }
+})]
