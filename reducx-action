@@ -1,0 +1,21 @@
+* reducer *
+
+import { handleActions } from 'redux-actions'
+
+const initState = {
+    loading: true,
+    result: []
+}
+
+export default handleActions({
+    [AD_SAMPLES]: (state, action) => ({ ...state, result: action.payload }),
+}, initState)
+
+* actions *
+
+import {  AD_SAMPLES } from '@/constants/actionTypes'
+import { createActions } from 'redux-actions'
+
+export const login = createActions({
+    [AD_SAMPLES]: options => options,
+})
