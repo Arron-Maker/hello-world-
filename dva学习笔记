@@ -1,0 +1,105 @@
+* webpackrc.js *
+
+export default {
+    publicPath: '/',
+
+    //按需加载
+    extraBabelPlugins: [
+        ['import', { 'libraryName': 'antd', 'libraryDirectory': 'es', 'style': 'css' }]
+    ],
+
+    //别名
+    alias: {
+        '@': `${__dirname}/src`,
+    },
+
+    //代理
+    proxy: {
+        '/aps': {
+            target: 'https://api.baxiaobu.com',
+            changeOrigin: true,
+            pathRewrite: {
+                '^/aps': '',
+            }
+        }
+    }
+}
+ 
+ * index.js *
+ 
+ npm i history -S
+ import { createBrowserHistory } from 'history'
+ // 1. Initialize
+ const app = dva({
+     history: createBrowserHistory(),
+ })
+ 
+ * models home.js *
+ 
+ import { getUser } from '@/services/home'
+
+  export default {
+      namespace: 'home', //命名空间
+
+      state: {
+          name: '张三',
+          data: []
+      },
+      //异步
+      effects: {
+          *fetch({ payload }, { call, put, select }) {
+              const datas = yield call(getUser)  //getUser === get('url')
+              yield put({
+                  type: 'updateName',
+                  payload: { data: datas.data.users }
+              })
+          }
+      },
+      //同步
+      reducers: {
+          updateName(state, action) {
+              return { ...state, ...action.payload } //解构
+          }
+      }
+  }
+
+* 触发 * 
+//同步
+click = () => {
+    this.props.dispatch({
+          type: 'home/updateName',
+          payload: {
+            name: '李四'  //传个对象
+          }
+    })
+}
+//异步
+ onclick = () => {
+    this.props.dispatch({
+        type: 'home/fetch',
+    })
+ }
+
+* router.js *
+
+import dynamic from 'dva/dynamic'
+
+function RouterConfig({ history, app }) {
+  const Home = dynamic({
+    app,
+    //redux异步加载
+    models: () => [
+      import('./models/home'),
+    ],
+    //组件异步加载
+    component: () => import('@/pages/home'),
+  })
+  return (
+    <Router history={history}>
+      <Switch>
+        <Route path="/" exact component={Home} />
+      </Switch>
+    </Router>
+  );
+}
+
