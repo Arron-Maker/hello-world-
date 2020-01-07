@@ -27,12 +27,31 @@ export default {
  
  * index.js *
  
- npm i history -S
+ cnpm i history -S
+ cnpm i redux-persist -S
+ 
  import { createBrowserHistory } from 'history'
- // 1. Initialize
- const app = dva({
-     history: createBrowserHistory(),
- })
+ import { persistStore, persistReducer } from 'redux-persist'
+ import storage from 'redux-persist/lib/storage'
+
+ const persistConfig = {
+    key: 'home',
+    storage,
+    whitelist: ['home'] //白名单 写谁谁持久化 //黑名单是写谁谁不持久化
+}
+
+const persistEnhancer = () => createStore => (reducer, initialState, enhancer) => {
+    const store = createStore(persistReducer(persistConfig, reducer), initialState, enhancer)
+    const persist = persistStore(store)
+    return { ...store, persist }
+}
+
+// 1. Initialize
+const app = dva({
+    history: createBrowserHistory(), //去掉 # 号
+    onReducer: reducer => persistReducer(persistConfig, reducer),
+    extraEnhancers: [persistEnhancer()],
+})
  
  * models home.js *
  
@@ -40,7 +59,19 @@ export default {
 
   export default {
       namespace: 'home', //命名空间
-
+      
+      //订阅 作用就是一进来页面就自动触发fetch函数拿到数据
+      subscriptions: {
+        setUp ({ history, dispatch }) {
+            history.listen(({ pathname }) => {
+                const reg = pathToRegexp('/').test(pathname)
+                if (reg) {
+                    dispatch({ type: 'fetch' })
+                }
+            })
+        }
+     },
+       
       state: {
           name: '张三',
           data: []
