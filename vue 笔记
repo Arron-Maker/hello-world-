@@ -212,4 +212,57 @@ utils/element.js
 */
 在main.js中引入utils/element.js
 
+* keep-alive *
+<template>
+    <div>
+        <keep-alive>
+            <router-view v-if="$route.meta.keepAlive" />  //匹配可以记录位置的组件
+        </keep-alive>
+        <router-view v-if="!$route.meta.keepAlive" /> //匹配不可以记录位置的组件
+    </div>
+</template>
+
+<template>
+  <div class="pages-home">
+    <div @click="onAlert()">Alert组件</div>
+    <div @click="onButton">注册组件</div>
+    <keep-alive>
+      <component :is="curren" /> //动态匹配组件
+    </keep-alive>
+  </div>
+</template>
+
+<script>
+import './style.less'
+import Alert from '@@/Alert'
+import Button from '@@/Button'
+export default {
+  data () {
+    return {
+      curren: Button
+    }
+  },
+  methods: {
+    onAlert () {
+      this.curren = Alert
+    },
+    onButton () {
+      this.curren = Button
+    }
+  },
+  components: {
+    Alert,
+    Button
+  }
+}
+</script>
+router.js
+{
+  path: '/',
+  component: Home,
+  meta: {
+    keepAlive: true  //添加这个属性判断要不要记录
+  }
+},
+
 
