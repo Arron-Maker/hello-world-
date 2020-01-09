@@ -68,4 +68,86 @@
           bottom: 0;
           margin: auto;
       }
-    
+      
+   * 6 * 检测object是数组还是对象
+      object.prototype.toString.call()
+      
+   * 7 * 防抖、节流
+      防抖：触发高频事件后n秒内函数只会执行一次，如果n秒内高频事件再次被触发，则重新计算时间
+      //防抖debounce代码：
+        function debounce(fn) {
+            let timeout = null // 创建一个标记用来存放定时器的返回值
+            return function () {
+                // 每当用户输入的时候把前一个 setTimeout clear 掉
+                clearTimeout(timeout);
+                // 然后又创建一个新的 setTimeout, 这样就能保证interval 间隔内如果时间持续触发，就不会执行 fn 函数
+                timeout = setTimeout(() => {
+                    fn.apply(this, arguments)
+                }, 500)
+            }
+        }
+        // 处理函数
+        function handle() {
+            console.log(Math.random())
+        }
+        // 滚动事件
+        window.addEventListener('scroll', debounce(handle))
+      
+      节流：高频事件触发，但在n秒内只会执行一次，所以节流会稀释函数的执行频率
+      //节流throttle代码：
+        function throttle(fn) {
+            let canRun = true // 通过闭包保存一个标记
+            return function () {
+                 // 在函数开头判断标记是否为true，不为true则return
+                if (!canRun) return
+                 // 立即设置为false
+                canRun = false
+                // 将外部传入的函数的执行放在setTimeout中
+                setTimeout(() => { 
+                // 最后在setTimeout执行完毕后再把标记设置为true(关键)表示可以执行下一次循环了。
+                // 当定时器没有执行的时候标记永远是false，在开头被return掉
+                    fn.apply(this, arguments)
+                    canRun = true
+                }, 500)
+            }
+        }
+
+        function sayHi(e) {
+            console.log(e.target.innerWidth, e.target.innerHeight)
+        }
+        window.addEventListener('resize', throttle(sayHi))
+      
+    * 8 * 跨域
+     node 代理,jsonp,后台设置后台设置请求头 response.setHeader("Access-Control-Allow-Origin", "*")
+     
+    * 9 * 图片优化
+     懒加载 雪碧图 icon base64 webp
+     
+    * 10 * 请求报文
+      1. 请求协议 HTTP 请求地址 2. 请求方法 post 3. 请求头部
+      响应报文
+      1. HTTP响应报文也由三部分组成：响应行、响应头、响应体
+      
+    * 11 * 如果需要手动写动画，你认为最小时间间隔是多久，为什么
+      显示器默认频率是60Hz，即1秒刷新60次，所以理论上最小间隔为1/60＊1000ms ＝ 16.7ms
+     
+    * 12 * JavaScript基本数据类型 
+      Object Number String Boolean Null undefinde Symbol Map Set 
+      
+    * 13 *CSS3有哪些新特性
+      RGBA和透明度； background-image background-origin(content-box/padding-box/border-box) background-size background-repeat； 
+      word-wrap（对长的不可分割单词换行）word-wrap：break-word； 
+      文字阴影：text-shadow： 5px 5px 5px #FF0000;（水平阴影，垂直阴影，模糊距离，阴影颜色）； 
+      font-face属性：定义自己的字体； 圆角（边框半径）：border-radius 属性用于创建圆角； 
+      边框图片：border-image: url(border.png) 30 30 round； 盒阴影：box-shadow: 10px 10px 5px #888888； 
+      媒体查询：定义两套css，当浏览器的尺寸变化时会采用不同的属性
+    * 14 * 设计模式有哪几种
+      工厂模式、单列模式的核心就是保证全局只有一个对象可以访问
+      适配器模式用来解决两个接口不兼容的情况，不需要改变已有的接口，通过包装一层的方式实现两个接口的正常协作
+      装饰模式作用是给对象添加功能
+      代理模式是为了控制对对象的访问，不让外部直接访问到对象
+      发布-订阅模式通过一对一或者一对多的依赖关系，当对象发生改变时，订阅方都会收到通知
+      外观模式提供了一个接口，隐藏了内部的逻辑，更加方便外部调用
+    * 15 * HTML语义化
+        用正确的标签做正确的事情；html语义化就是让页面的内容结构化，便于对浏览器、搜索引擎解析；在没有样式CSS情况下也以一种文档格式显示，
+        并且是容易阅读的；搜索引擎的爬虫依赖于标记来确定上下文和各个关键字的权重，利于SEO；使阅读源代码的人对网站更容易将网站分块，便于阅读维护理解。
