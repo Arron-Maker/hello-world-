@@ -1,0 +1,77 @@
+*** index.jsx ***
+
+import React, { useState, useEffect } from 'react' // 引入了hook的两个生命周期
+import _ from 'loadsh' // loadsh的深拷贝
+import { Add } from '@/utils/request' // 提出来的方法也是自定义hook
+import Cat from './cat' // 自定义hook组件
+
+export default function Person() {
+    //hook是一个特殊的函数，可以让你沟入react 例如 useState
+    //它可以让你在不编写 class 的情况下使用 state 以及其他的 React 特性。
+    //最多两个，一个变量，一个改变它的方法
+    let [count, setCount] = useState(0) //给变量传值 第一个钩子
+    let [sum = '张三', setSum] = useState() //默认值
+    const [todos, setTodos] = useState([
+        { name: '张三' },
+        { name: '李四' }
+    ])
+
+    const onSum = () => {
+        setSum(sum = '李四')
+    }
+
+    //不能直接插入，必须深拷贝
+    const onTodos = () => {
+        todos.push({ name: '王五' })
+        setTodos(_.cloneDeep(todos))
+    }
+
+    //等价于DidMount DidUpdate willUnMount
+    //每次渲染后调用 包括第一次渲染
+    useEffect(() => {
+        //返回一个函数，会在组件销毁时调用
+    })
+    return (
+        <div className='pages_home'>
+            <p>{count}</p>
+            <button onClick={() => setCount(count+1)}>点我</button>
+            <p>{sum}</p>
+            <button onClick={onSum}>点我</button>
+            <p>
+                { todos.map((v, k) => <span key={k}>{v.name}</span>) }
+            </p>
+            <button onClick={onTodos}>点我</button>
+            <div>{Add()}</div>
+            <Cat />
+        </div>
+    )
+}
+
+*** Cat.jsx ***  // 鼠标划过的坐标
+
+import React, { useState } from 'react'
+
+export default function Cat() {
+    let [x, getX] = useState(0)
+    let [y, getY] = useState(0) 
+
+    const handleMouseMove = event => {
+        getX(x = event.clientX)
+        getY(y = event.clientY)
+    }
+
+    return (
+        <div style={{ height: '100%' }} onMouseMove={handleMouseMove}>
+            <p style={{height:300, border: '1px solid red'}}>当前的鼠标位置是 ({x}, {y})</p>
+        </div>
+    )
+}
+
+*** request.js ***
+
+export function Add() {
+    const [name, setName] = useState('小兰')
+    return <h1 onClick={() => setName(name + 1)}>{name}</h1>
+}
+
+
