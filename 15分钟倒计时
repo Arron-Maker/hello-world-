@@ -49,3 +49,4 @@ export default class extends PureComponent {
         )
     }
 }
+//如果要返回上一级的话 点击的时候要清除倒计时
