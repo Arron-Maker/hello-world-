@@ -1,0 +1,51 @@
+import React, { PureComponent } from 'react'
+import { notification } from 'antd'
+import './payment.less'
+
+const openNotificationWithIcon = (type, opt) => {
+    notification[type]({
+        message: opt,
+    })
+}
+let timer = ''
+export default class extends PureComponent {
+    //倒计时
+    componentDidMount() {
+        let time = 900
+        const fn = () => {
+            time = time - 1
+            let s = document.querySelector('.second')
+            let m = document.querySelector('.minute')
+            let second = parseInt((time / 60))
+            let minute = parseInt((time % 60))
+            s.innerHTML = zero(minute)
+            m.innerHTML = zero(second)
+            if (time < 0) {
+                clearInterval(timer)
+                openNotificationWithIcon('warning', '支付超时')
+            }
+        }
+        const zero = x => {
+            if (x > 10) {
+                return x
+            } else if (x < 0) {
+                return '00'
+            } else {
+                return `0${x}`
+            }
+        }
+        timer = setInterval(fn, 1000)
+    }
+    render() {
+        return (
+            <div className='payment'>
+                <div className='payment-top'>
+                    <p>支付剩余时间</p>
+                    <p>
+                        <span>00</span> : <span className='minute'>15</span> : <span className='second'>00</span>
+                    </p>
+                </div>
+            </div>
+        )
+    }
+}
