@@ -1,0 +1,33 @@
+import React, { Component } from 'react'
+
+export default class extends Component {
+    state = {
+        obj: {
+            h1: <h1>标题一</h1>,
+            h2: <h1>标题二</h1>,
+            h3: <h1>标题三</h1>
+        },
+        html: ''
+    }
+
+    onclick = opt => {
+        this.setState({
+            html: this.state.obj[opt]
+        })
+    }
+
+    render() {
+        const { html } = this.state
+        return (
+            <div className="order">
+                <div>
+                    <p onClick={() => this.onclick('h1')}>标题一</p>
+                    <p onClick={() => this.onclick('h2')}>标题二</p>
+                    <p onClick={() => this.onclick('h3')}>标题三</p>
+                </div>
+                <div>{ html }</div>
+            </div>
+        )
+    }
+}
+
