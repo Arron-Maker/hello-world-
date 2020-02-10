@@ -1,0 +1,16 @@
+wxml语法
+
+判断语句：
+<view wx:if="{{count > 1}}">233</view>
+<view wx:elif="{{count == 1}}">111</view>
+<view wx:else>123</view>
+
+v-show同款方式:
+<view hidden="{{false}}">小花</view> //false 是显示 true 是隐藏
+
+for循环：
+<view wx:for="{{data}}" wx:key="id"> //key唯一标识变量名或者可以是*this
+  <text>{{item.name}}</text>
+  -
+  <text>{{item.age}}</text>
+</view>
