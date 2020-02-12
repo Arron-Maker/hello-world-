@@ -42,3 +42,46 @@ wxml:
   时间系统 - {{tool.fns()}}
 </view>
 <wxs src="./index.wxs" module="tool"/>
+
+wxs方法用在点击事件：
+点击添加样式：
+function fn(event, ownerInstance) {
+  var instance = ownerInstance.selectComponent('.name')
+  instance.setStyle({
+    "font-size": "24px"
+  })
+  instance.addClass('color')
+}
+module.exports = {
+  fns: fn
+}
+
+<view bind:tap="{{tool.fns}}">
+  111
+</view>
+<wxs src="./index.wxs" module="tool"/>
+
+全局配置 app.json tabBar 底部切换
+"tabBar":{
+    "color": "#999", //默认颜色
+    "selectedColor": "#f00", //选中颜色
+    "list":[
+      {
+        "pagePath": "pages/goods/index", //路径
+        "text":"首页", //名称
+        "iconPath":"/assets/add.png",//默认图标样式
+        "selectedIconPath":"/assets/addActive.png"//选中图标样式
+      }
+    ]
+  },
+  导航栏 
+  "window":{
+    "navigationBarBackgroundColor": "#000000", //背景色
+    "navigationBarTitleText": "微信小程序",  //文字
+    "navigationBarTextStyle": "white" //文字颜色
+    "backgroundColor": "#f5f5f5",//下拉背景颜色
+    "enablePullDownRefresh": true //下拉刷新 默认为false
+  },
+
+
+
