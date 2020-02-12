@@ -14,3 +14,31 @@ for循环：
   -
   <text>{{item.age}}</text>
 </view>
+
+事件：
+wxml:<button type="default" bindtap="update">点我</button>
+js:
+data: {
+  arr: [1, 2],
+  update() {
+    this.data.arr.push(3)
+    this.setData({
+      arr: this.data.arr
+    })
+  }
+  
+wxs: //写完记得导出，支持e5及一下语法
+
+wxs:
+function fn() {
+  return 111
+}
+module.exports = {
+  fns: fn
+}
+
+wxml:
+<view>
+  时间系统 - {{tool.fns()}}
+</view>
+<wxs src="./index.wxs" module="tool"/>
