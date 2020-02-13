@@ -138,5 +138,19 @@ onLogin(){
     <text>{{result.name}}</text>
   </view>
   
+  组件点击传参
+  <view class="com-card" bindtap="onclick" data-flag="{{result.url}}">
+    <image src="{{result.imgUrl}}" mode="aspectFill"/>
+    <view class="com-box">
+      <text>{{result.name}}</text>
+    </view>
+  </view>
+  接收
+  onclick(e) {
+    wx.navigateTo({
+      url: e.currentTarget.dataset.flag
+    })
+  }
+  
 
 
