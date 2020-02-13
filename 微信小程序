@@ -81,7 +81,62 @@ module.exports = {
     "navigationBarTextStyle": "white" //文字颜色
     "backgroundColor": "#f5f5f5",//下拉背景颜色
     "enablePullDownRefresh": true //下拉刷新 默认为false
+  }
+  
+ 路由
+ 不包括tabBar
+<navigator open-type="navigateTo" url="/pages/list/index">
+    3333
+</navigator>
+tabBar //跳转完会清除所有的记录，回退不了了
+<navigator open-type="switchTab" url="/pages/home/index">
+  444
+</navigator>
+重定向
+<navigator open-type="redirectTo" url="/pages/list/index">
+555
+</navigator>
+点击登录
+<view bind:tap="onLogin">登录</view>
+onLogin(){
+    wx.navigateTo({
+      url: '/pages/list/index'
+    })
   },
-
+ 传值
+ <navigator open-type="navigateTo" url="/pages/list/index?name=李四">
+    3333
+ </navigator>
+ onLogin(){
+    wx.navigateTo({
+      url: '/pages/list/index?name=2&age=3'
+    })
+ }
+ 获取值 //跳到那个页面在那个页面写
+ onLoad: function (options) {
+    console.log(options)
+ },
+ 
+ 组件传值
+ 父子传值：
+ 父 ：data: {
+    result: {
+      imgUrl: '/assets/1.jpg',
+      name: '小羊'
+    }
+  }
+  <Images result="{{result}}"/>
+子 js：properties: {
+    // result: Object //这种也可以 但是没有默认值，不安全 推荐下边
+    result: {
+      type: 'Object', //类型
+      value: {}
+    }
+  },
+  <view class="home">
+    <image src="{{result.imgUrl}}" mode="aspectFill" />
+    <text>{{result.name}}</text>
+  </view>
+  
 
 
