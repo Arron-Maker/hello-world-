@@ -151,6 +151,38 @@ onLogin(){
       url: e.currentTarget.dataset.flag
     })
   }
+  父子传参
+  <block wx:for="{{result}}" wx:key="id">
+    <Card result="{{item}}" bind:onclick="onclick"/>
+  </block>
+  onclick(){
+    console.log('我是父组件')
+  },
+  子：
+  <view class="com-card" bind:tap="onTap">
+    <image src="{{result.imgUrl}}" mode="aspectFill"/>
+    <view class="com-box">
+      <text>{{result.name}}</text>
+    </view>
+  </view>
+  methods: {
+    onTap(evt){
+      console.log(1)
+      this.triggerEvent('onclick')
+    }
+  }
   
+  子传父
+  methods: {
+    onTap(evt){
+      this.triggerEvent('onclick', {
+        name: '张慧敏'
+      })
+    }
+  }
+  父：
+  onclick(options){
+    console.log(options)
+  }
 
 
