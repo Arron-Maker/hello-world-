@@ -185,4 +185,39 @@ onLogin(){
     console.log(options)
   }
 
+支持npm
+找到对应目录 npm init 一路回车 就有package.json
+cnpm i qs -S 就有node-module 工具 构建npm 之后就可以用了 import qs from 'qs' .js文件里引用
+勾选npm 在详情 本地配置
+
+request请求
+详情 不校验合法域名
+get
+onReady () {
+    wx.request({
+      url: 'https://blogs.zdldove.top/Home/Apis/listWithPage',
+      success: (res) => {
+        console.log(res.data)
+        this.setData ({
+          result: res.data.result.list
+        })
+      }
+    })
+  },
+post
+onReady () {
+    wx.request({
+      method:'POST',
+      url: 'https://blogs.zdldove.top/Home/Apis/listWithPage',
+      data:qs.stringify({
+        page: 2
+      }),
+      success: (res) => {
+        console.log(res.data)
+        this.setData ({
+          result: res.data.result.list
+        })
+      }
+    })
+  },
 
