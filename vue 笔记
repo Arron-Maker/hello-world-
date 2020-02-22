@@ -1,3 +1,6 @@
+npm run serve 
+package.json --open 自动打开浏览器
+
 <template>
   <!-- v-bind的使用 -->
   <div :class="{active: isActive}">
