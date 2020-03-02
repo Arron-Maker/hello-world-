@@ -11,6 +11,7 @@ export default function Person() {
     //最多两个，一个变量，一个改变它的方法
     let [count, setCount] = useState(0) //给变量传值 第一个钩子
     let [sum = '张三', setSum] = useState() //默认值
+    const [data, setData] = useState([])
     const [todos, setTodos] = useState([
         { name: '张三' },
         { name: '李四' }
@@ -28,9 +29,16 @@ export default function Person() {
 
     //等价于DidMount DidUpdate willUnMount
     //每次渲染后调用 包括第一次渲染
+    
     useEffect(() => {
-        //返回一个函数，会在组件销毁时调用
-    })
+        axios({
+            method: 'post',
+            url: 'https://blogs.zdldove.top/Home/Apis/listWithPage'
+        })
+            .then(res => {
+                setData([...data, _.get(res.data, 'result.list',[])])
+            })
+    }, [])
     return (
         <div className='pages_home'>
             <p>{count}</p>
