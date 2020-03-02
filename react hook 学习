@@ -16,9 +16,9 @@ export default function Person() {
         { name: '李四' }
     ])
 
-    const onSum = () => {
-        setSum(sum = '李四')
-    }
+    const onSum = () => setSum({
+        sum: '李四'
+    })
 
     //不能直接插入，必须深拷贝
     const onTodos = () => {
