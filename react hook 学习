@@ -55,31 +55,58 @@ export default function Person() {
     )
 }
 
-*** Cat.jsx ***  // 鼠标划过的坐标
+*** redux ***  //hook的redux
 
-import React, { useState } from 'react'
+& reducer.js &
 
-export default function Cat() {
-    let [x, getX] = useState(0)
-    let [y, getY] = useState(0) 
+import { handleActions } from 'redux-actions'
+import { FETCH_HOMES } from '@/constants/actionTypes' // 常量
 
-    const handleMouseMove = event => {
-        getX(x = event.clientX)
-        getY(y = event.clientY)
-    }
-
-    return (
-        <div style={{ height: '100%' }} onMouseMove={handleMouseMove}>
-            <p style={{height:300, border: '1px solid red'}}>当前的鼠标位置是 ({x}, {y})</p>
-        </div>
-    )
+const defaultState = {
+    homesData: []
 }
 
-*** request.js ***
+export default handleActions({
+    [FETCH_HOMES]: (state, action) => ({
+        ...state,
+        homesData: action.payload.data.data
+    })
+}, defaultState)
 
-export function Add() {
-    const [name, setName] = useState('小兰')
-    return <h1 onClick={() => setName(name + 1)}>{name}</h1>
+& action.js &
+
+import { createActions } from 'redux-actions'
+import { homes, } from '@/services' // 封装一层的请求
+import { FETCH_HOMES, } from '@/constants/actionTypes' // 常量
+
+export const homesFn = createActions({
+    [FETCH_HOMES]: () => homes(),
+})
+
+& homes.jsx & // 获取数据
+
+import React, { useState, useEffect, useCallback } from 'react'
+import { useDispatch, useMappedState } from 'redux-react-hook'
+import { FETCH_HOMES, } from '@/constants/actionTypes' // 常量
+import { homesFn } from '@/actions/homes' // actions的方法
+import { hump } from '@/utils/string'  // 常量变为小写的方法
+
+export default function Homes() {
+    const onData = homesFn[hump(FETCH_HOMES)]
+    const mapState = useCallback(state => {
+        console.log(state.homes,1)
+        return {
+            homesData: state.homes.data
+        }
+    })
+    const { homesData } = useMappedState(mapState)// 拿数据
+    const dispatch = useDispatch() // 获取dispatch
+    useEffect(() => {
+        dispatch(onData())
+    }, [])
+    return()
 }
+
+
 
 
