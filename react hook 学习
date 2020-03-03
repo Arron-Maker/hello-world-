@@ -107,6 +107,62 @@ export default function Homes() {
     return()
 }
 
+& store.js &
+
+import { createStore, combineReducers, compose, applyMiddleware } from 'redux'
+import promise from 'redux-promise'
+import { persistReducer } from 'redux-persist' // 数据持久化
+import storage from 'redux-persist/lib/storage'
+import autoMergeLevel2 from 'redux-persist/lib/stateReconciler/autoMergeLevel2'
+import { login, persists, hook, homes } from '@/reducer'
+
+//我要对那些state做数据持久化
+const rootPersistConfig = {
+    key: 'root',
+    storage: storage,
+    stateReconciler: autoMergeLevel2,   // 多层
+    whitelist: ['login'] //白名单 
+}
+//为 某个 reduce 做数据持久化
+const myPersistReducer = persistReducer (
+    rootPersistConfig,
+    combineReducers({
+        login,
+        persists,
+        hook,
+        homes
+    })
+)
+const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose
+const store = createStore(
+    myPersistReducer,
+    composeEnhancers(applyMiddleware(promise, thunk))
+)
+window.store = store
+export { store }
+
+& index.js &
+
+import React from 'react'
+import ReactDOM from 'react-dom'
+import Router from '@/router/index'  // 路由
+import { store } from './store'  //store
+import { Provider } from 'react-redux'
+import { persistStore } from 'redux-persist'   //数据持久化
+import { PersistGate } from 'redux-persist/lib/integration/react'
+import { StoreContext } from 'redux-react-hook'
+import './styles/style.less'
+
+ReactDOM.render(
+    <Provider store={store}>
+        <StoreContext.Provider value={store}>
+            <PersistGate loading={null} persistor={persistStore(store)}>
+                <Router />
+            </PersistGate>
+        </StoreContext.Provider>
+    </Provider>,
+document.getElementById('root'))
+
 
 
 
