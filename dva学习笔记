@@ -2,6 +2,8 @@
 
 export default {
     publicPath: '/',
+    
+    "disableCSSModules":true, // css 不屑global
 
     //按需加载
     extraBabelPlugins: [
