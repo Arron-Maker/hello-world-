@@ -3,7 +3,7 @@
 export default {
     publicPath: '/',
     
-    "disableCSSModules":true, // css 不屑global
+    "disableCSSModules":true, // 关闭css module
 
     //按需加载
     extraBabelPlugins: [
@@ -54,6 +54,14 @@ const app = dva({
     onReducer: reducer => persistReducer(persistConfig, reducer),
     extraEnhancers: [persistEnhancer()],
 })
+
+window.app = app  // 把app放入全局
+
+// 4. Router
+app.router(require('@/router').default)
+
+// 5. Start
+app.start('#root')
  
  * models home.js *
  
@@ -112,22 +120,34 @@ click = () => {
         type: 'home/fetch',
     })
  }
-
-* router.js *
-
-import { Router, Route, Switch } from 'dva/router'
-import dynamic from 'dva/dynamic'
-
-function RouterConfig({ history, app }) {
-  const Home = dynamic({
+ 
+ $ router
+ * components.js *
+ 
+ import dynamic from 'dva/dynamic'
+ 
+ const app = window.app
+ const Home = dynamic({
     app,
     //redux异步加载
     models: () => [
-      import('./models/home'),
+      import('@/models/home'),
     ],
     //组件异步加载
     component: () => import('@/pages/home'),
   })
+  
+  export{
+    Home
+  }
+ 
+* router.js *
+
+import { Router, Route, Switch } from 'dva/router'
+import { Home } from './components
+
+
+function RouterConfig({ history, app }) {
   return (
     <Router history={history}>
       <Switch>
@@ -135,5 +155,5 @@ function RouterConfig({ history, app }) {
       </Switch>
     </Router>
   );
-}
+}  $
 
