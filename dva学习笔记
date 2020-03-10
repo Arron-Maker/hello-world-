@@ -1,7 +1,7 @@
 * webpackrc.js *
 
 export default {
-    publicPath: '/',
+    publicPath: '/', //打包路径
     
     "disableCSSModules":true, // 关闭css module
 
