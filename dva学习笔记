@@ -53,6 +53,7 @@ const app = dva({
     history: createBrowserHistory(), //去掉 # 号
     onReducer: reducer => persistReducer(persistConfig, reducer),
     extraEnhancers: [persistEnhancer()],
+    onError: e => console.log(e)
 })
 
 window.app = app  // 把app放入全局
