@@ -1,0 +1,5 @@
+调用安卓的方法
+window.android.anPai(参数)
+
+调用IOS的方法
+window.webkit.messageHandlers.iosPai.postMessage('321')
