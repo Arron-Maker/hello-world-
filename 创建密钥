@@ -2,3 +2,8 @@
 ssh-keygen -t rsa -C "github邮箱 / gitlab用户名"
 2.接着打开公钥：
 cat ~/.ssh/id_rsa.pub
+3.git config --global user.name "zhanghuimin"
+4.git config --global user.email "z2513327391@163.com"
+5.git config -l
+
+
