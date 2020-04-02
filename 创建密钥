@@ -1,0 +1,4 @@
+1.首先需要创建公钥
+ssh-keygen -t rsa -C "github邮箱 / gitlab用户名"
+2.接着打开公钥：
+cat ~/.ssh/id_rsa.pub
