@@ -1,0 +1,67 @@
+yarn add mobx mobx-react 安装
+yarn add @babel/plugin-proposal-decorators
+
+git init
+git add .
+git commit -m 'xm'
+npm run eject
+
+pacjage.json替换
+"babel": {
+  "presets": [
+    "react-app"
+  ],
+  "plugins": [
+    [
+      "@babel/plugin-proposal-decorators",
+      {
+        "legacy": true
+      }
+    ]
+  ]
+}
+
+import { observable } from 'mobx'
+import { observer } from 'mobx-react' 
+
+// 基本数据类型
+const num = observable.box(99)
+
+<h2>{num.set(22)}</h2> // 改变用set()
+<h1>{num.get()}</h1> // get转变会原始数据类型
+
+// 复杂数据类型 //拥有数组的一些方法
+const num = observable([1, 2, 3])
+ 
+//  class定义
+import { observable, computed, autorun } from 'mobx'
+
+export default class Data {
+    @observable num = 99
+    @observable str = '小白'
+    @observable arr = [1, 2]
+    @observable list = [3, 4, 5]
+
+    @computed get total () { //计算属性
+        return this.num + this.str
+    }
+    @computed get fn () {
+        return [...this.arr, ...this.list]
+    }
+    set total (n) { // //修改 相当于一个监听
+        console.log(n)
+    }
+}
+
+const data = new Data()
+
+console.log(data.fn)
+data.total = 9999
+
+autorun(() => { // 自动运行 必须改变一个数据才能触发自动运行 有他必须也要有set
+    console.log(data.total)
+})
+data.total = 999
+ 
+ 
+ 
