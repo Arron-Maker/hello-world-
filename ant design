@@ -64,3 +64,11 @@ class Sider extends Component {
         )
     }
 }
+
+// 自定义序号
+{
+    title: '序号',
+    align: 'center',
+    width: 50,
+    render:(text,record,index)=> `${index+1}`,
+},
