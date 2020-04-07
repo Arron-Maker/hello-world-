@@ -1,0 +1,92 @@
+yarn add mobx mobx-react 安装
+yarn add @babel/plugin-proposal-decorators
+
+git init
+git add .
+git commit -m 'xm'
+npm run eject
+
+pacjage.json替换
+"babel": {
+  "presets": [
+    "react-app"
+  ],
+  "plugins": [
+    [
+      "@babel/plugin-proposal-decorators",
+      {
+        "legacy": true
+      }
+    ]
+  ]
+}
+
+import { observable } from 'mobx'
+import { observer } from 'mobx-react' 
+
+// 基本数据类型
+const num = observable.box(99)
+
+<h2>{num.set(22)}</h2> // 改变用set()
+<h1>{num.get()}</h1> // get转变会原始数据类型
+
+// 复杂数据类型 //拥有数组的一些方法
+const num = observable([1, 2, 3])
+ 
+//  class定义
+import { observable, computed, autorun, when, reaction, action } from 'mobx'
+
+export default class Data {
+    @observable num = 99
+    @observable str = '小白'
+    @observable bool = false
+    @observable arr = [1, 2]
+    @observable list = [3, 4, 5]
+    // 计算属性必须加get 和 return
+    @computed get total () { //计算属性 相关属性变化时自动更新 被使用的时候才会触发
+        return this.num + this.str
+    }
+    @computed get fn () {
+        return [...this.arr, ...this.list]
+    }
+    set total (n) { // //修改可观察数据 相当于一个监听 不能用来改变计算属性的值
+        console.log(n)
+    }
+    // 特别注意在get之后定义set
+    @action bar () {
+      this.num = 100
+      this.str = 20
+    }
+}
+
+const data = new Data()
+
+console.log(data.fn)
+data.total = 9999 // 触发set total
+
+//autorun
+autorun(() => { // 必须改变一个数据才能触发自动运行 有他必须也要有set
+    console.log(data.total)
+})
+ 
+//when 
+// 接受两个参数 第一个参数是一个可观察数据返回的boolean 第二个参数是一个函数，当Boolean为true才会执行 * 只会执行一次 *
+when(() => data.bool, () => { 
+    console.log('this is true', 111)
+})
+
+//reaction
+//接收两个函数作为参数
+//第一个函数引用可观察数据，并返回一个可观察数据，作为第二个函数的参数
+//可观察数据被修改的时候会触发
+reaction(() => [data.num, data.str], arr => {
+    console.log(arr, 222)
+})
+data.num = 'pingan'
+data.str = 112
+
+data.bar() //执行action reaction只执行了一次
+
+
+ 
+ 
