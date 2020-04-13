@@ -221,3 +221,24 @@ onReady () {
     })
   },
 
+
+* radio组 *
+// xml
+<radio-group class="radio-group" bindchange="radioChange">
+        <radio 
+          class="radio" 
+          wx:for-items="{{radios}}" 
+          wx:key="id" 
+          value="{{item.title}}" 
+          checked="{{item.checked}}"
+        >
+          <label>{{item.title}}</label>
+        </radio>
+</radio-group>
+// js
+radios:[
+      { id: 0, title: '不招聘', checked: false },
+      { id: 1, title: '电话不通', checked: false },
+      { id: 2, title: '空号', checked: false },
+      { id: 3, title: '其他', checked: false },
+],
