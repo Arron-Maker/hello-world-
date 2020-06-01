@@ -73,7 +73,7 @@ class Sider extends Component {
     render:(text,record,index)=> `${index+1}`,
 },
 
-//onRow事件
+//onRow事件 table
 onRow={record => {
     return {
         onClick: () => {
@@ -93,3 +93,27 @@ selectRow = opt => {
         cid: opt.stcd
     })
 }
+
+// 日期选择框
+const dateFormat = 'YYYY/MM/DD HH:mm:ss';
+
+export default class Home extends React.Component {
+  render () {
+    const year = moment().year()  // 获取当前年
+    const month = moment().month() + 1 // 获取当前月
+    const date = moment().date() // 获取当前日
+
+    return (
+      <div>
+        <RangePicker
+          defaultValue={[
+            moment(`${year}/${month}/${date} 20:00:00`, dateFormat), 
+            moment('2015/01/01', dateFormat)
+          ]}
+          format={dateFormat}
+        />
+      </div>
+    )
+  }
+}
+
