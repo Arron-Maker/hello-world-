@@ -72,3 +72,24 @@ class Sider extends Component {
     width: 50,
     render:(text,record,index)=> `${index+1}`,
 },
+
+//onRow事件
+onRow={record => {
+    return {
+        onClick: () => {
+            this.selectRow(record);
+        },
+    }
+}}
+rowClassName={(record, index) => {
+    let className = '';
+    record.stcd == cid ? className = 'clickRowStyle' : ''
+    return className;
+}}
+
+//点击行
+selectRow = opt => {
+    this.setState({
+        cid: opt.stcd
+    })
+}
