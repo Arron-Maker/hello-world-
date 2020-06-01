@@ -1,0 +1,7 @@
+//使用彩色
+import './fonts/iconfont.js'
+import './fonts/iconfont.css'
+
+<svg className="icon iconForecast" aria-hidden="true">
+    <use xlinkHref="#icon-yujing-shuiku-chaoxunxian"></use>
+</svg>
