@@ -21,6 +21,23 @@ err = e => {
   render: item => <img src={item} onError={this.err} />,
 },
 
+// 分页
+<Pagination
+    total={total} // 总数
+    size="small"
+    current={current} // 当前页数
+    pageSize={Number(size)} // 每页显示条数
+    showSizeChanger
+    onShowSizeChange={(pagenum, pagesize) => {
+         this.getTableList(pagesize, pagenum); // 条数 页数
+    }}
+    showQuickJumper
+    onChange={(pagenum, pagesize) => {
+         this.getTableList(pagesize, pagenum);
+    }}
+    showTotal={() => `共 ${total - 0 || 0} 条`}
+/>
+
 //menu菜单
 class Sider extends Component {
     state = {
