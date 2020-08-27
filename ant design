@@ -73,6 +73,18 @@ class Sider extends Component {
     render:(text,record,index)=> `${index+1}`,
 },
 
+//连续的序号
+{
+        title: '序号',
+        width: 80,
+        dataIndex: 'id',
+        render: (text, record, index) => {
+                // 当前页数  默认条数
+          const { pageNum, currentPageSize } = this.state
+          return (pageNum - 1) * currentPageSize + (index + 1);
+        },
+},
+
 //onRow事件 table
 onRow={record => {
     return {
