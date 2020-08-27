@@ -1,0 +1,16 @@
+
+delete = async record => {
+    const { id } = record || {}
+    try {
+      // await封装的请求
+      const res = await deleteItem({ ids: id });
+      if (res.success) {
+        message.success(res.data);
+        this.getTableList(10, 1);
+      } else {
+        message.error(res.message);
+      }
+    } catch (err) {
+      message.error('删除失败!');
+    }
+  }
