@@ -20,6 +20,15 @@ err = e => {
   dataIndex: 'bannerUrl',
   render: item => <img src={item} onError={this.err} />,
 },
+// table多选框禁用
+rowSelection={{
+   type: 'checkbox',
+   selectedRowKeys,
+   getCheckboxProps: record => ({
+              // 已选中的数据
+        disabled: disabled.indexOf(record.id) >= 0, 
+   }),
+}}
 
 // 分页
 <Pagination
