@@ -1,0 +1,115 @@
+import React, { useEffect, useRef, useState } from 'react';
+import { message } from 'antd';
+import Editor from 'wangeditor';
+import { uploadCover } from '@/services/contentPublish/newManagement'; // 接口
+import './style.less'
+
+const EditorComp = ({ onChange, value = '', disabled = true, flag }) => {
+  const editorElem = useRef();
+  const [editor, setEditor] = useState(null);
+
+  const initEditor = () => {
+    const elem = editorElem.current;
+    const editorE = new Editor(elem);
+    editorE.customConfig.zIndex = 100;
+    // editor.customConfig.uploadImgServer = utils.url + '/fileclient-management/api/uploadpic';
+    // 限制一次最多上传 1 张图片
+    editorE.customConfig.uploadImgMaxLength = 1
+    editorE.customConfig.customUploadImg = async (files, insert) => {
+      // files 是 input 中选中的文件列表
+      if (files[0]) {
+        const formData = new window.FormData();
+        formData.append('file', files[0])
+        const res = await uploadCover(formData);
+        if (res.success) {
+          insert(res.data)
+        }
+      } else {
+        message.info('请选择要上传的图片');
+      }
+    }
+    editorE.customConfig.menus = flag === 'detail' ? [] : [
+      'undo', // 撤销
+      'redo', // 重复
+      'head', // 标题
+      'bold', // 粗体
+      'fontSize', // 字号
+      // 'fontName', // 字体
+      'italic', // 斜体
+      'underline', // 下划线
+      'strikeThrough', // 删除线
+      'foreColor', // 文字颜色
+      'backColor', // 背景颜色
+      'justify', // 对齐方式
+      'list', // 列表
+      'link', // 插入链接
+      // 'quote', // 引用
+      // 'emoticon', // 表情
+      'image', // 插入图片
+      'table', // 表格
+      // 'video', // 插入视频
+      // 'code', // 插入代码
+    ]
+    editorE.customConfig.lang = {
+      '设置标题': 'Title',
+      '字号': 'Size',
+      '文字颜色': 'Color',
+      '设置列表': 'List',
+      '有序列表': '',
+      '无序列表': '',
+      '对齐方式': 'Align',
+      '靠左': '',
+      '居中': '',
+      '靠右': '',
+      '正文': 'p',
+      '链接文字': 'link text',
+      '链接': 'link',
+      '上传图片': 'Upload',
+      '网络图片': 'Web',
+      '图片link': 'image url',
+      '插入视频': 'Video',
+      '格式如': 'format',
+      '上传': 'Upload',
+      '创建': 'init'
+    }
+
+    editorE.customConfig.onchange = html => {
+      // html 即变化之后的内容
+      onChange(html);
+    }
+    editorE.disabled = disabled
+    editorE.create();
+    setEditor(editorE);
+    editorE.$textElem.attr('contenteditable', disabled)
+  }
+
+  useEffect(() => {
+    initEditor();
+  }, []);
+
+
+  useEffect(() => {
+    if (editor !== null) {
+      editor.txt.html(value)
+    }
+  }, [value, editor]);
+
+  return (
+    <div ref={editorElem} style={{ textAlign: 'left', background: `${disabled ? '' : '#eee'}` }} />
+  )
+}
+
+export default EditorComp;、
+
+.w-e-toolbar{
+    flex-wrap: wrap !important;
+}
+
+.w-e-text{
+    >p{
+        >img{
+            width: 100%;
+            height: 300px;
+        }
+    }
+}
