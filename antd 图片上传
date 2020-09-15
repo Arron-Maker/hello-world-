@@ -1,0 +1,41 @@
+<FormItem label="封面图片"
+  help={curTag.flag !== 'detail' ? '支撑扩展名: .jpg .png 图片大小限制500KB' : ''}
+>
+  {getFieldDecorator('coverUrl', {
+    valuePropName: 'fileList',
+    initialValue: coverUrlList,
+    getValueFromEvent: e => this.normFile(e, 500, 'coverUrlList'),
+  })(
+    curTag.flag !== 'detail' ? <Upload
+      {...uploadprops}
+      accept=".jpg,.png,.jpeg"
+      listType="picture-card"
+    >
+      {coverUrlList.length < 1 ? (
+        <Button>
+          <Icon type="upload" /> 上传图片
+        </Button>
+      ) : null}
+    </Upload>
+      : <img src={detailData.coverUrl} alt="" style={{ width: 80, height: 80 }} />,
+  )}
+</FormItem>
+
+normFile = (e, size, flag) => {
+    const { file, fileList } = e
+    if (file.status) {
+      this.setState({
+        [flag]: fileList,
+      })
+      return fileList
+    }
+    const isSize = file.size > size * 1024;
+    if (isSize) {
+      message.warning(`图片大于${size}KB请重新上传`);
+    } else {
+      this.setState({
+        [flag]: fileList,
+      });
+      return fileList
+    }
+  };
