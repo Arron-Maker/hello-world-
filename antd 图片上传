@@ -39,3 +39,84 @@ normFile = (e, size, flag) => {
       return fileList
     }
   };
+  
+  // 验证宽高
+  const uploadButton = (
+      <div>
+        <Icon type={this.state.loading ? 'loading' : 'plus'} />
+        <div className="ant-upload-text">Upload</div>
+      </div>
+    );
+  const { getFieldDecorator, getFieldValue } = this.props.form;
+  const tit = getFieldValue('location')
+  const help = tit === 1
+     ? "banner尺寸：1030*360（3倍图）" : tit === 2 ? 'banner尺寸：1030*240（3倍图）' : ''
+  <Form.Item label="图片"
+     help={help}
+  >
+     {getFieldDecorator('iconUrl', {
+        valuePropName: 'bannerUrl',
+        initialValue: modalList.bannerUrl || '',
+        getValueFromEvent: this.normFile,
+        rules: [{ required: true, message: '请上传' }],
+     })(
+        <Upload
+            accept=".jpg,.png,.svg,.jpeg"
+            listType="picture-card"
+            onChange={this.handleChange}
+            disabled={flag === 'edit' ? true : false}
+            beforeUpload={this.largerBeforeUpload}
+        >
+          {
+               modalList.bannerUrl
+                  ? <img src={modalList.bannerUrl} alt="avatar" style={{ width: '100%' }} />
+                  : uploadButton
+          }
+        </Upload>)}
+  </Form.Item>
+  
+   // 上传前验证图片宽高
+  largerBeforeUpload = file => {
+    const { getFieldValue } = this.props.form;
+
+    return getFieldValue('location') === 1 ? this.isSize(file, 1030, 360) : this.isSize(file, 1030, 240)
+  }
+  // 比较宽高
+  isSize = (file, width, height) => {
+    return new Promise((resolve, reject) => {
+      let _URL = window.URL || window.webkitURL;
+      let img = new Image();
+      img.onload = () => {
+        let valid = img.width == width && img.height == height;
+        valid
+          ? resolve()
+          : message.error('图片尺寸不符合要求，请修改后重新上传！'); reject();
+      };
+      img.src = _URL.createObjectURL(file);
+    });
+  }
+  // change的时候
+  handleChange = async ({ fileList }) => {
+    if (fileList.length > 0) {
+      
+        const { getFieldValue } = this.props.form;
+
+        const formData = new FormData();
+        formData.append('file', fileList[0].originFileObj);
+        formData.append('location', getFieldValue('location'))
+        request('/upload/banner', {
+          method: 'POST',
+          body: formData,
+          requestType: 'form',
+        }).then(res => {
+          if (res.success) {
+            this.setState({
+              bannerUrl: res.data,
+            });
+          } else {
+            message.error(res.message)
+          }
+        });
+    }
+  };
+  
