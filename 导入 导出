@@ -1,0 +1,23 @@
+export = () => {
+    exportActive() // 请求方法
+      .then(res => {
+        const content = res;
+        const blob = new Blob([content]);
+        const fileName = `${new Date().getTime()}_导出结果.xlsx`;
+        if ('download' in document.createElement('a')) {
+          const elink = document.createElement('a');
+          elink.download = fileName;
+          elink.style.display = 'none';
+          elink.href = URL.createObjectURL(blob);
+          document.body.appendChild(elink);
+          elink.click();
+          URL.revokeObjectURL(elink.href);
+          document.body.removeChild(elink);
+        } else {
+          navigator.msSaveBlob(blob, fileName);
+        }
+      })
+      .catch(res => {
+        message.error('导出失败');
+      });
+  }
