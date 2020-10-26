@@ -1,0 +1,108 @@
+import React, { Component } from 'react';
+import styles from './index.less';
+import { connect } from 'dva';
+import router from 'umi/router';
+import { Input, Button } from 'antd';
+
+// let map;
+const AMap = window.AMap;
+export default class extends Component {
+    componentDidMount() {
+        let map = new AMap.Map("amap", {
+            resizeEnable: true,
+            center: [120.235652, 30.273295],//地图中心点
+            zoom: 13,//地图显示的缩放级别
+            keyboardEnable: false
+        });
+        map.on('click', function (e) {
+            var geoCoder = new AMap.Geocoder({
+                city: "杭州"//城市，默认：“全国”
+            });
+            // 点击地图上所标点的坐标
+            var lnglatXY = [
+                e.lnglat.getLng(),
+                e.lnglat.getLat()
+            ];
+            // 根据经纬度获取详细信息
+            geoCoder.getAddress(lnglatXY, function (status, result) {
+                if ((status === 'complete' && result.regeocode)) {
+                    const { street = '', streetNumber = '' } = result?.regeocode?.addressComponent;
+                    document.getElementById("submit").value = street + streetNumber;
+                } else {
+                    log.error('根据经纬度查询地址失败')
+                }
+            });
+
+            // document.getElementById("keyword").value = e.lnglat.getLng() + ',' + e.lnglat.getLat();
+        });
+        AMap.plugin(['AMap.Autocomplete', 'AMap.PlaceSearch'], function () {
+            var autoOptions = {
+                city: "杭州", //城市，默认全国
+                input: "keyword"//使用联想输入的input的id
+            };
+            const autocomplete = new AMap.Autocomplete(autoOptions);
+            var placeSearch = new AMap.PlaceSearch({
+                city: '杭州',
+                map: map
+            })
+            AMap.event.addListener(autocomplete, "select", function (e) {
+                //TODO 针对选中的poi实现自己的功能
+                document.getElementById("submit").value = '';
+                placeSearch.setCity(e.poi.adcode);
+                placeSearch.search(e.poi.name)
+            });
+        });
+
+    }
+    render() {
+        return (
+            <div id="amap" className={styles.amap}>
+                <Input className={styles.mapInput} id='keyword' type="text" placeholder='请输入' />
+                <div className={styles.submitBtn}>
+                    <Input className={styles.mapSubmit} id='submit' type="text" defaultValue='' />
+                    <Button type='primary' className={styles.subBtn}>提交</Button>
+                </div>
+            </div>
+        )
+    }
+}
+
+
+
+.amap{
+    width: 100%;
+    height: 500px;
+}
+.mapInput{
+    z-index: 999;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    width: 400px;
+    height: 45px;
+    line-height: 45px;
+}
+.submitBtn{
+    display: flex;
+    flex-direction: row;
+    position: absolute;
+    top: 70px;
+    right: 20px;
+    z-index: 999;
+    width: 400px;
+    height: 45px;
+
+}
+.mapSubmit{
+    height: 45px;
+    line-height: 45px;
+}
+.subBtn{
+    height: 45px;
+    width: 90px;
+}
+
+  
+  
+
+
