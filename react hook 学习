@@ -163,6 +163,84 @@ ReactDOM.render(
     </Provider>,
 document.getElementById('root'))
 
+import react{ useRef, forwardRef, useImperativeHandle, useMemo, useCallback } from 'react;
+
+const Hook = props => {
+    <div style={{ margin: "100px", border: "2px dashed", padding: "20px" }}>
+        <div
+          onClick={() => {
+            domRef.current.focus();
+            domRef.current.value = '请输入';
+          }}
+        >
+          <label>这是一个dom节点：</label><input ref={domRef} />
+        </div>
+        <br />
+        <p onClick={showChild} style={{ marginTop: "20px" }}>
+          这是子组件
+        </p>
+        <Child ref={childRef} />
+     </div>
+}
+
+const Child = forwardRef((props, ref) => {
+  useImperativeHandle(ref, () => ({
+    say: sayHello,
+  }));
+  const sayHello = () => alert("hello,我是子组件");
+  return null
+});
+
+useMemo and useCallback
+useMemo和useCallback都会在组件第一次渲染的时候执行，之后会在其依赖的变量发生改变时再次执行；
+并且这两个hooks都返回缓存的值，useMemo返回缓存的变量，useCallback返回缓存的函数。
+
+* React.memo() * react 16.6
+
+React.memo() 和 PureComponent 很相似，它帮助我们控制何时重新渲染组件。
+组件仅在它的 props 发生改变的时候进行重新渲染。通常来说，在组件树中 React 组件，只要有变化就会走一遍渲染流程。
+但是通过 PureComponent 和 React.memo()，我们可以仅仅让某些组件进行渲染。
+由于只有需要被渲染的组件被渲染了，所以这是一个性能提升。
+PureComponent 要依靠 class 才能使用。而 React.memo() 可以和 function component 一起使用。
+
+import React from 'react';
+
+const ImplicitSnowy = React.memo(props => (
+  <div>implicit memoized component</div>
+));
+
+const SubComponent = props => <>implicit memoized component</>
+
+const Memo = React.memo(SubComponent, (prevProps, nextProps) => 
+  prevProps.name === nextProps.name
+);
+
+memo接收两个参数，一个是组件，一个是函数。这个函数就是定义了memo需不需要render的钩子。
+比较前一次的props跟当前props，返回true表示不需要render。
+也就是传给Memo的name不变时，不会触发SubComponent的render函数。
+
+* React.lazy and suspence  *
+
+React.lazy 用于做Code-Splitting，代码拆分。类似于按需加载，渲染的时候才加载代码。
+React.lazy的提出是一种更优雅的条件渲染解决方案。
+之所以说他更优雅，是因为他将条件渲染的优化提升到了框架层。
+这里我们引出suspense。
+当我们组件未渲染完成，需要loading时，可以这么写：
+
+const OtherComponent = React.lazy(() => import('./OtherComponent'));
+function MyComponent() {
+  return (
+    <div>
+      <Suspense fallback={antd的空状态}>
+        <OtherComponent />
+      </Suspense>
+    </div>
+  );
+}
+
+
+
+
 
 
 
