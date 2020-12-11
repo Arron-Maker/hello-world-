@@ -163,10 +163,14 @@ ReactDOM.render(
     </Provider>,
 document.getElementById('root'))
 
-import react{ useRef, forwardRef, useImperativeHandle, useMemo, useCallback } from 'react;
+import react,{ useRef, forwardRef, useImperativeHandle, useMemo, useCallback } from 'react';
 
 const Hook = props => {
-    <div style={{ margin: "100px", border: "2px dashed", padding: "20px" }}>
+   const domRef = useRef(null)
+   const childRef = useRef(null)
+   const showChild = () => childRef.current.say()
+   return (
+       <div style={{ margin: "100px", border: "2px dashed", padding: "20px" }}>
         <div
           onClick={() => {
             domRef.current.focus();
@@ -181,6 +185,7 @@ const Hook = props => {
         </p>
         <Child ref={childRef} />
      </div>
+   )
 }
 
 const Child = forwardRef((props, ref) => {
