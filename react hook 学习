@@ -1,6 +1,6 @@
 *** index.jsx ***
 
-import React, { useState, useEffect } from 'react' // 引入了hook的两个生命周期
+import React, { useState, useEffect } from 'react' // 引入了hook的两个钩子
 import _ from 'loadsh' // loadsh的深拷贝
 import { Add } from '@/utils/request' // 提出来的方法也是自定义hook
 import Cat from './cat' // 自定义hook组件
