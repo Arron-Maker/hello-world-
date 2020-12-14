@@ -243,7 +243,114 @@ function MyComponent() {
   );
 }
 
+import react, { useState, useEffect, useRef, useReducer, useContext, Component, Children } from 'react';
+import { Button } from 'antd';
+/** hooks获取上一次的值 **/
+const Counter = () => {
+  const [count, setCount] = useState(0)
+  const now = count + 100
+  const pre = usePrevious(now)
+  return (
+    <>
+      <button onClick={() => setCount(count+1)}>click</button>
+      <p>pre: {pre} now: {now}</p>
+    </>
+  )
+}
 
+function usePrevious(value) {
+  const ref = useRef();
+  useEffect(() => {
+    ref.current = value;
+  },[value]);
+  return ref.current;
+}
+
+export default Counter
+
+/** useContext useReducer **/
+const TodosDispatch = React.createContext(null);
+const initialState = { count: 0 };
+function reducer(state, action) {
+  switch (action.type) {
+    case 'increment':
+      return { count: state.count + 1 };
+    default:
+      throw new Error();
+  }
+}
+function TodosApp() {
+  // 提示：`dispatch` 不会在重新渲染之间变化
+  const [todos, dispatch] = useReducer(reducer, initialState);
+  return (
+    <TodosDispatch.Provider value={dispatch}>
+      <DeepChild todos={todos} />
+    </TodosDispatch.Provider>
+  );
+}
+
+function DeepChild(props) {
+  // 如果我们想要执行一个 action，我们可以从 context 中获取 dispatch。
+  const dispatch = useContext(TodosDispatch);
+  const handleClick = () => dispatch({ type: 'increment' });
+  return (
+    <>
+      <button onClick={handleClick}>Add todo</button>
+      <p>{props.todos.count}</p>
+    </>
+  );
+}
+export default TodosApp
+
+/** context **/
+const ThemeContext = React.createContext(null);
+
+export default class extends Component {
+  render() {
+    const obj = {
+      name: '张三',
+      type: 'danger'
+    }
+    return (
+      <ThemeContext.Provider value={obj}>
+         <Toolbar />     
+      </ThemeContext.Provider>
+    )
+  }
+}
+
+const Toolbar = () => {
+  return (
+    <div>
+      <ThemedButton />
+    </div>
+  )
+}
+
+class ThemedButton extends Component {
+  static contextType = ThemeContext;
+  render() {
+    return <Button type={this.context.type}>click me</Button>
+  }
+}
+
+export default class extends Component {
+  render() {
+    return (
+      <CallRole>
+        <Button type="primary">click me</Button>
+      </CallRole>
+    )
+  }
+}
+
+const CallRole = ({ children }) => {
+  return (
+    <div>
+      {children}
+    </div>
+  )
+}
 
 
 
