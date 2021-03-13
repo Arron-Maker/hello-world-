@@ -353,6 +353,36 @@ const CallRole = ({ children }) => {
 }
 
 
+/* ********************************************************************************************************************************************************** */
+
+////// useState //////
+
+const [current, setCurrent] = useState(0)
+ // 获取current上一次的值
+ const prev = () => {
+  setCurrent(prev => {
+    return prev - 1
+  })
+ }
+ 
+ ////// useMemo useCallback //////
+ 
+共同点：useMemo和useCallback接收的参数都是一样，都是在其依赖项发生变化后才执行，都是返回缓存的值，
+区  别：在于useMemo返回的是函数运行的结果，useCallback返回的是函数。
+
+const { getFieldDecorator } = useMemo(() => form, [form]); // 缓存父级传来的
+
+const [text, setText] = useState(undefined);
+
+const handleSearch = useCallback(() => {
+    console.log(text)
+}, [text]);
+
+
+
+
+
+
 
 
 
