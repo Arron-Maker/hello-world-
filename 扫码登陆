@@ -1,0 +1,59 @@
+export default connect()(function QRCodeLogin({ dispatch }) {
+  const [dingSrc, setDingSrc] = useState('');
+
+  // 丁丁扫码登录
+  useEffect(() => {
+    // 已有用户信息，直接进入页面
+    const info = storage.session.get(USER_INFO);
+    if (info) {
+      router.replace('/');
+      return;
+    }
+    const goto = `https://login-pro.ding.zj.gov.cn/oauth2/auth.htm?response_type=code&client_id=${clientId}&redirect_uri=${LOGIN_URL}&scope=get_user_info&authType=QRCODE&embedMode=true`;
+    setDingSrc(goto);
+
+    // 注册监听扫描事件
+    const handleMessage = event => {
+      if (event && event.data && event.data.code) {
+        const formData = new FormData();
+        formData.append('code', event.data.code);
+        qrCodeLogin({ zzdCode: event.data.code })
+          .then(res => {
+            if (res.success) {
+              console.log(res);
+            } else {
+              !!res.errorMsg && message.warn(res.errorMsg || '扫码失败');
+            }
+          })
+          .catch(() => {
+            message.warn('扫码失败');
+          });
+      }
+    };
+
+    if (typeof window.addEventListener !== 'undefined') {
+      window.addEventListener('message', handleMessage, false);
+    } else if (typeof window.attachEvent !== 'undefined') {
+      window.attachEvent('onmessage', handleMessage);
+    }
+    return () => {
+      if (typeof window.removeEventListener !== 'undefined') {
+        window.removeEventListener('message', handleMessage, false);
+      } else if (typeof window.detachEvent !== 'undefined') {
+        window.detachEvent('onmessage', handleMessage);
+      }
+    };
+  }, []);
+
+  return (
+    <div className={styles['qrcode-login']}>
+      <div className={styles.code}>
+        {dingSrc && <iframe className={styles['ding-code']} src={dingSrc} title="dding qrcode" />}
+      </div>
+      <div className={styles.extra}>
+        <img src={icon} alt="二维码扫描" />
+        浙政钉扫码登录
+      </div>
+    </div>
+  );
+});
