@@ -1,12 +1,11 @@
-// 遍历修改树字段
-export const traverseTree = org => {
-  if (!org) return {};
-  const haveChildren = org?.childAreaInfo?.length;
-  return {
-    ...org,
-    label: org.areaName,
-    title: org.areaName,
-    value: org.areaCode,
-    children: haveChildren ? org.childAreaInfo.map(i => traverseTree(i)) : [],
-  };
+// 递归树
+export const recursionList = (org) => {
+  if (!org) return []
+  return org.map(v => {
+    return {
+      ...v,
+      label: v.title,
+      children: v?.children?.length > 0 ? recursionList(v.children) : null
+    }
+  })
 };
