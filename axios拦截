@@ -64,3 +64,106 @@ export const post = (url, payload = {}) => {
       })
   })
 }
+
+
+
+
+// 项目实战
+
+import axios from 'axios';
+import { history, getDvaApp } from 'umi';
+import { isProd } from '@/utils/index'; // 判断环境 export const isProd = process.env.NODE_ENV === 'production';
+
+function genInstance() {
+  const axiosConfig = {
+    baseURL: isProd ? '/worker-app' : '/worker-app',
+    timeout: 10000,
+  };
+
+  const instance = axios.create(axiosConfig);
+  // const whiteList = ['login', 'getCentralCockpitToken'];
+  const loginErrCodes = ['10102', '10103'];
+  const tokenInvalid = ['10101'];
+
+  // 添加请求拦截器
+  instance.interceptors.request.use(
+    config => {
+      const accessToken = localStorage.getItem('accessToken');
+      console.log('accessToken', accessToken);
+      const { headers } = config;
+      config.headers = {
+        ...headers,
+        Authorization: accessToken,
+        // Authorization: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiIxIn0.wu0KEC_PUDkkGRFUEoXg0ZD6_iz_cCt6b95eC1opF4M' || accessToken,
+      };
+      // const { baseURL, headers, url } = config;
+      // const base = baseURL;
+      // const { pathname } = new URL(base + url);
+      // 在发送请求之前做些什么
+      // const isNeedToken = !whiteList.some(path => pathname.includes(path));
+      // if (isNeedToken) {
+      //   if (isProd) {
+      //     const { token } = storage.get(myConfig.storagePrefix + 'logInfo') || {};
+      //     if (token) {
+      //       config.headers = {
+      //         ...headers,
+      //         // Authentication: token,
+      //         Authorization: token,
+      //       };
+      //       };
+      //     }
+      //   } else {
+      //     config.headers = { // 有数据的token
+      //       ...headers,
+      //       Authorization: '0d451041190d79754874d61c52adbc45',
+      //     };
+      //   }
+      // }
+      return config;
+    },
+    error => {
+      // 对请求错误做些什么
+      return Promise.reject(error);
+    },
+  );
+
+  // 添加响应拦截器
+  instance.interceptors.response.use(
+    response => {
+      const code = response.data.errorCode;
+      const token = response.headers.Authorization;
+      if (token) {
+        localStorage.setItem('accessToken', token);
+      }
+      if (loginErrCodes.includes(code)) {
+        history.push('/exception/403');
+        return;
+      }
+      if (tokenInvalid.includes(code)) {
+        localStorage.setItem('accessToken', null);
+
+        getDvaApp()._store.dispatch({
+          type: 'login/resetLoginInfo',
+        });
+      }
+      return response;
+    },
+    error => {
+      // 对响应错误做点什么
+      const { data = {}, status } = error.response || {};
+      const errorMsg = data.errorCode || '';
+      if (tokenInvalid.includes(errorMsg)) {
+        localStorage.setItem('accessToken', null);
+
+        getDvaApp()._store.dispatch({
+          type: 'login/resetLoginInfo',
+        });
+      }
+    },
+  );
+
+  return instance;
+}
+
+export default genInstance();
+
