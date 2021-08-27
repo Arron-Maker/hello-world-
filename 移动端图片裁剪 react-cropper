@@ -1,0 +1,79 @@
+import { useState } from 'react';
+import { Modal, Toast } from 'antd-mobile';
+import Cropper from 'react-cropper';
+import 'cropperjs/dist/cropper.css';
+import { uploadPicture } from '@/services/global';
+import styles from './style.less';
+
+// image 图片base64路径
+// filename 图片名称
+// 设置父组件本地上传的file
+// width hieght 裁剪框的比例
+
+export default ({ imageShow, onClose, image, form, filename, setFiles, width, height }) => {
+  const [cropper, setCropper] = useState();
+
+  const dataURLtoFile = function (dataurl, filename) {
+    var arr = dataurl.split(','),
+      mime = arr[0].match(/:(.*?);/)[1],
+      bstr = atob(arr[1]),
+      n = bstr.length,
+      u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
+  }
+
+  const getCropData = async () => {
+    if (typeof cropper !== "undefined") {
+      const formData = new FormData();
+      const file = dataURLtoFile(cropper.getCroppedCanvas().toDataURL(), filename);
+      formData.append('file', file);
+      const result = await uploadPicture(formData);
+      if (result?.status === 200 && result?.data?.success) {
+        form.setFieldsValue({
+          activityPic: result?.data?.data,
+        });
+        setFiles([{
+          file,
+          url: cropper.getCroppedCanvas().toDataURL()
+        }])
+        onClose()
+        Toast.success('上传成功', 1, false, false);
+      } else {
+        Toast.fail(result?.data?.errorMsg, 1, false, false);
+      }
+    }
+  };
+
+  return (
+    <Modal
+      visible={imageShow}
+      onClose={onClose}
+      maskClosable={true}
+      closable
+      transparent
+      wrapClassName={styles.image_modal}
+    >
+      <Cropper
+        aspectRatio={width / height}
+        style={{ height: 400, width: "100%" }}
+        zoomTo={0.5}
+        initialAspectRatio={1}
+        src={image}
+        viewMode={1}
+        background={false}
+        responsive={true}
+        autoCropArea={1}
+        checkOrientation={false}
+        onInitialized={instance => setCropper(instance)}
+        guides={true}
+      />
+      <div className={styles.footer}>
+        <p onClick={onClose}>取消</p>
+        <p onClick={getCropData}>完成</p>
+      </div>
+    </Modal>
+  )
+}
