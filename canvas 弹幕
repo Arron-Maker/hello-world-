@@ -99,3 +99,8 @@ useEffect(() => {
     textList.forEach((t) => shoot(t))
   }
 }, [checked, textList])
+
+<canvas id="canvas" className={styles.canvas}>
+  您的浏览器不支持canvas标签。
+</canvas>
+<img src={avatar} style={{ display: 'none', }} id='avatar'/>
