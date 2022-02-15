@@ -1,0 +1,101 @@
+export default (name, img) => {
+  const canvas = document.getElementById(name);
+  const avatar = document.getElementById(img);
+  let rect = canvas.getBoundingClientRect();
+  let w = rect.right - rect.left;
+  let h = rect.bottom - rect.top;
+  const ctx = canvas.getContext('2d');
+  ctx.font = '13px Microsoft YaHei';
+  let barrageList = [];
+
+  //添加弹幕列表
+  const shoot = (value) => {
+    let top = getTop();
+    let color = '#E9633D';
+    let offset = getOffset();
+    let width = Math.ceil(ctx.measureText(value).width);
+
+    let barrage = {
+      value,
+      top,
+      left: w,
+      color,
+      offset,
+      width
+    }
+    barrageList.push(barrage);
+  }
+
+  //开始绘制
+  const draw = () => {
+    if (barrageList.length) {
+      ctx.clearRect(0, 0, w, h);
+      for (let i = 0; i < barrageList.length; i++) {
+        let b = barrageList[i];
+        if (b.left + b.width <= 0) {
+          barrageList.splice(i, 1);
+          i--;
+          continue;
+        }
+        b.left -= b.offset;
+        drawText(b);
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+
+  //绘制内容
+  const drawText = (barrage) => {
+    const itemWidth = ctx.measureText(barrage.value).width + 25;
+    const rect = {
+      x: barrage.left,
+      y: barrage.top,
+      width: itemWidth,
+      height: 15
+    }
+    ctx.strokeStyle = "#E9633D";
+    drawUsingArc(rect, 8, ctx)
+    ctx.drawImage(avatar, barrage.left, barrage.top, 15, 15);
+
+    ctx.fillStyle = barrage.color;
+    ctx.fillText(barrage.value, barrage.left + 20, barrage.top + 12);
+  }
+
+  //获取随机top
+  const getTop = () => {
+    return Math.floor(Math.random() * (h + 30)) - 50;
+  }
+
+  //获取偏移量
+  const getOffset = () => {
+    return +(Math.random() * 3).toFixed(1) + 0.5;
+  }
+
+  // 绘制圆角矩形
+
+  const drawUsingArc = (rect, r, ctx) => {
+    var path = new Path2D();
+
+    path.moveTo(rect.x + r, rect.y);
+    path.lineTo(rect.x + rect.width - r, rect.y);
+    path.arc(rect.x + rect.width - r, rect.y + r, r, Math.PI / 180 * 270, 0, false);
+    path.lineTo(rect.x + rect.width, rect.y + rect.height - r);
+    path.arc(rect.x + rect.width - r, rect.y + rect.height - r, r, 0, Math.PI / 180 * 90, 0, false);
+    path.lineTo(rect.x + r, rect.y + rect.height);
+    path.arc(rect.x + r, rect.y + rect.height - r, r, Math.PI / 180 * 90, Math.PI / 180 * 180, false);
+    path.lineTo(rect.x, rect.y + r);
+    path.arc(rect.x + r, rect.y + r, r, Math.PI / 180 * 180, Math.PI / 180 * 270, false);
+
+    ctx.stroke(path);
+  }
+  return [shoot, draw]
+}
+
+useEffect(() => {
+  const [shoot, draw] = useBarrage('canvas', 'avatar');
+
+  if (checked) {
+    draw();
+    textList.forEach((t) => shoot(t))
+  }
+}, [checked, textList])
