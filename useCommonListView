@@ -1,0 +1,243 @@
+useCommonListView.js
+/**
+ *
+ * @description 下拉加载更多
+ * @return 
+ * data：返回的所有数据 加载状态（isLoading），是否还有更多（isMore），是否为空（isEmpty），数据列表（list）
+ * onEndReached:下拉加载更多
+ * resetFetch：重置请求 --页码为1
+ * totalRef.current --总数据个数
+ */
+import { useState, useRef, useEffect } from 'react';
+import update from 'immutability-helper';
+
+export default ({ pageSize, otherParams = {}, fetchURL, name = null, start = true, type }) => {
+  const [data, setData] = useState({
+    isLoading: true,
+    isMore: true,
+    list: [],
+    isEmpty: false,
+  });
+  const pageNumRef = useRef(1);
+  const totalRef = useRef(0);
+  const [record, setRecord] = useState({});
+
+  const queryList = async (parm = {}) => {
+    if (!fetchURL) {
+      setData({
+        isLoading: false,
+        isMore: false,
+        list: [],
+        isEmpty: true,
+      })
+      return;
+    }
+
+    //查询列表
+    let pageNum = name ? name[0] : 'pageNum';
+    let pageSizeName = name ? name[1] : 'pageSize';
+    let resultDataName = name ? name[2] : 'data';
+    let resultListName = name ? name[3] : 'pageList'
+
+    const params = {
+      ...parm,
+      [pageNum]: pageNumRef.current,
+      [pageSizeName]: pageSize,
+    };
+
+    const newParams = update(params, { $merge: otherParams });
+
+    const result = await fetchURL(newParams);
+    if (result?.status === 200 && result.data?.success) {
+      const resultData = type === 'records' ? result?.data?.data?.[resultListName] : result?.data?.data;
+      setRecord(result?.data?.data)
+      totalRef.current = resultData?.total ?? 0;
+      const dataList = resultData?.[resultDataName] ?? [];
+      let isMore = true;
+      if (pageSize * pageNumRef.current >= totalRef.current) {
+        isMore = false;
+      }
+
+      let isEmpty = false;
+      if (totalRef.current === 0) {
+        isEmpty = true;
+      }
+
+      const newData = update(data, {
+        isLoading: {
+          $set: false,
+        },
+        isMore: {
+          $set: isMore,
+        },
+        isEmpty: {
+          $set: isEmpty,
+        },
+        list:
+          pageNumRef.current === 1
+            ? {
+                $set: dataList,
+              }
+            : { $push: dataList },
+      });
+      setData(newData);
+    } else {
+      const newData = update(data, {
+        isLoading: {
+          $set: false,
+        },
+        isMore: {
+          $set: false,
+        },
+        isEmpty: {
+          $set: true,
+        },
+      });
+      setData(newData);
+    }
+  };
+
+  useEffect(() => {
+    if(start){
+      queryList();
+    }
+  }, [start]);
+
+  //查询更多数据
+  const onEndReached = () => {
+    if (pageSize * pageNumRef.current >= totalRef.current) return;
+    const newData = update(data, {
+      isLoading: {
+        $set: true,
+      },
+    });
+    setData(newData);
+    pageNumRef.current = pageNumRef.current + 1;
+    queryList();
+  };
+
+  //重置些请求参数
+  const resetFetch = parm => {
+    pageNumRef.current = 1;
+    const newData = update(data, {
+      isLoading: {
+        $set: true,
+      },
+      isMore: {
+        $set: true,
+      },
+      isEmpty: {
+        $set: false,
+      },
+    });
+    setData(newData);
+
+    queryList(parm);
+  };
+
+  if(type === 'time'){
+    return [data, onEndReached, resetFetch, record];
+  } else if(type === 'records') {
+    const params = {
+      ...data,
+      ...record,
+    }
+    return [params, onEndReached, resetFetch]
+  }
+  return [data, onEndReached, resetFetch, totalRef.current];
+};
+
+CommonListView.js
+import React, { useRef, useState, useEffect, useCallback } from 'react';
+import { ListView, Icon } from 'antd-mobile';
+import EmptyPlace from '@/components/EmptyPlace';
+import styles from './index.less';
+
+export default (props) => {
+  const {
+    row,
+    data,
+    onEndReached,
+    className = 'am-list',
+    height,
+    pageSize = 10,
+    style = true,
+    lineStyle,
+  } = props
+  const listRef = useRef(null);
+  const dataSourceInit = new ListView.DataSource({
+    rowHasChanged: (row1, row2) => row1 !== row2,
+  });
+
+  const [dataSource, setDataSource] = useState(dataSourceInit);
+
+  useEffect(() => {
+    if (!data?.isLoading) {
+      setDataSource(dataSource.cloneWithRows(data?.list ?? []));
+    }
+  }, [data]);
+
+  const renderFooter = useCallback(() => {
+    const { isLoading, isMore, isEmpty } = data;
+    return (
+      <div className={styles.footers}>
+        {isLoading ? (
+          <Icon type="loading" size="lg" />
+        ) : !isLoading && isEmpty ? (
+          <div style={{ marginTop: '60px' }}>
+            <EmptyPlace />
+          </div>
+        ) : (
+              !isMore && !isLoading && <div className={styles.noMore}>暂无更多</div>
+            )}
+      </div>
+    );
+  }, [data?.isLoading, data?.isEmpty, data?.isMore]);
+
+  const wrapEndReached = () => {
+    if (!data.isMore) return;
+    onEndReached();
+  };
+
+  return (
+    <>
+      <ListView
+        ref={listRef}
+        dataSource={dataSource}
+        renderFooter={renderFooter}
+        renderRow={row}
+        pageSize={pageSize}
+        className={className || styles.scroll_wrap}
+        scrollRenderAheadDistance={500}
+        onEndReachedThreshold={10}
+        style={{
+          height: height || document.documentElement.clientHeight,
+          overflow: style ? 'auto' : 'hidden',
+          ...lineStyle
+        }}
+        initialListSize={pageSize}
+        onEndReached={wrapEndReached}
+      />
+    </>
+  );
+};
+
+commonListView.less
+
+@color-text-placeholder:#666;
+.footers{
+    padding: 10px;
+    text-align: center;
+    margin-bottom: 30px;
+    color:@color-text-placeholder;    
+}
+.noMore{
+    color:@color-text-placeholder;  
+    text-align: center;  
+}
+
+.scroll_wrap::-webkit-scrollbar { 
+    width: 0 !important;
+    -ms-overflow-style: none;  
+    overflow: -moz-scrollbars-none;
+}
