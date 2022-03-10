@@ -1,0 +1,99 @@
+/**
+ * @Description 多选/全选
+ * @return
+ * total 总数据的个数，用来判断是否全部选中，需要获取列表数据后更新total值，调用updateTotal()方法，进行更新
+ *  
+ * @method onSelect 
+ * 单选点击调用  onSelect方法
+ * 
+ * @method changeAll 
+ * 全选调用 changeAll 方法 -- 参数 （checked,data,key）
+ * checked： （选中状态 Boolean）
+ * data： （列表数据 Array）
+ * key： （data数据的唯一值）
+ */
+import { useState, useRef } from 'react';
+import update from 'immutability-helper';
+
+export default () => {
+  const [allChecked, setAllChecked] = useState(false); //全选
+  const [action, setAction] = useState(1); //标识单选/多选 -- 默认单个选择 1 单选 /2 全选
+
+  const [singMap, setSingMap] = useState(new Map([])); //选中的数据
+
+  const totalRef = useRef(0);
+
+  const updateSingMap=(data,key)=>{
+    let singMapObj=new Map([]);
+    if(Array.isArray(data) && data.length){
+      for(let i=0,len=data.length;i<len;++i){
+        singMapObj= update(singMapObj, {
+          $add: [[data[i][key], true]],
+        });
+      }
+      return singMapObj;
+    }
+  }
+
+  /**
+   * 全选
+   * @param {boolean} checked 
+   * @param {Array} data 
+   * @param {唯一值 string | number} key 
+   */
+  const changeAll = (checked,data,key) => {
+    setAction(2);
+    setAllChecked(checked);
+    if(checked){
+      const newSingMap=updateSingMap(data,key);
+      setSingMap(newSingMap);
+    }else{
+      setSingMap(new Map([]))
+    }  
+  };
+
+
+
+  /**
+   *
+   * 点击单选
+   * @param {唯一值 string | number} key
+   * @param {boolean} checked
+   */
+  const onSelect = (key, checked) => {
+    let newDeleteMember;
+    if (checked) {
+      newDeleteMember = update(singMap, {
+        $add: [[key, checked]],
+      });
+    } else {
+      newDeleteMember = update(singMap, {
+        $remove: [key],
+      });
+    }
+
+    if (newDeleteMember.size === totalRef.current) {
+      setAction(2);
+      setAllChecked(true);
+    } else {
+      setAction(1);
+      setAllChecked(false);
+    }
+
+    setSingMap(newDeleteMember);
+  };
+
+  const updateTotal = total => {
+    totalRef.current = total;
+  };
+  /**
+   * 清除状态
+   */
+  const clearStatus=()=>{
+    setSingMap(new Map([]));
+    setAllChecked(false);
+    setAction(1);
+  }
+
+  return [action, singMap, allChecked, onSelect, changeAll, updateTotal,clearStatus];
+};
