@@ -1,0 +1,46 @@
+import BulletScreen, { StyledBullet } from 'rc-bullets';
+import { history, useDispatch, useSelector } from 'umi';
+
+const [checked, setChecked] = useState(false);
+const [screen, setScreen] = useState(null);
+const { record, userMessage, data } = useSelector((state) => state.flower);
+
+useEffect(() => {
+    if (checked) {
+      // 给页面中某个元素初始化弹幕屏幕，一般为一个大区块。此处的配置项全局生效
+      let s = new BulletScreen('#screen', {
+        duration: 20, // 滚动时长
+        animateTimeFun: 'linear, cubic-bezier(0.6, 0.1, 0, 0.4)', // 动画函数
+        pauseOnClick: true, // 点击停止
+        trackHeight: 40, 
+      });
+      setScreen(s);
+    } else {
+      if (screen) {
+        screen.clear();
+      }
+    }
+  }, [checked]);
+
+  useEffect(() => {
+    if (screen) {
+      const html = (text) => (
+        <div className={styles['bullet_item']}>
+          <img src={avatar} />
+          <p>{text}参与了活动</p>
+        </div>
+      );
+
+      data?.map((v, k) => {
+        screen.push(
+          <StyledBullet
+            // head={avatar} // 头像
+            msg={html(v?.name)} // 文字
+            backgroundColor="none" // 背景颜色
+            size="small" // 尺寸
+            color="#FC4A18" //文字颜色
+          />,
+        );
+      });
+    }
+  }, [screen]);
