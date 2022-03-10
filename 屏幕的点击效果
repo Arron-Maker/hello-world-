@@ -1,0 +1,43 @@
+ import { useEffect } from 'react';
+ import flower from '@/assets/images/meigui.png';
+ 
+ useEffect(() => {
+   actionEffect();
+ }, []);
+ 
+ const actionEffect = () => {
+    const mapContainer = document.getElementById('mapContainer');
+    mapContainer.addEventListener('click', function (e) {
+      let x = e.pageX,
+        y = e.pageY, // 获取点击位置
+        img = document.createElement('img'); // 创建展示playWords的span
+
+      img.src = flower;
+      img.style.cssText = [
+        'z-index: 9999; position: absolute; top: ',
+        y,
+        'px; left: ',
+        x,
+        'px; font-weight: bold; color: ',
+        'width: 52px; height: 78px;',
+      ].join('');
+      document.body.appendChild(img);
+      renderWords(img);
+    });
+
+    function renderWords(el) {
+      let i = 0,
+        top = parseInt(el.style.top);
+
+      let playTimer = setInterval(function () {
+        if (i > 120) {
+          clearInterval(playTimer);
+          el.parentNode.removeChild(el);
+        } else {
+          i += 1;
+          el.style.top = top + 'px';
+          el.style.opacity = (120 - i) / 120;
+        }
+      }, 10);
+    }
+  };
