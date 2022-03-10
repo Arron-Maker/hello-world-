@@ -1,0 +1,35 @@
+问题描述
+在IOS手机中，轮播图左滑手势，会触发页面的左滑关闭，两者存在手势上的冲突。需要通过禁止轮播图外层包裹元素的默认事件来阻止冲突。现提供自定义hook的方式解决。
+
+问题解决
+1、轮播图代码如下，需在外层包裹id为Carousel的元素
+
+import { useEffect } from 'react';
+export function usePreventDefaultEvent(id) {
+  useEffect(() => {
+    const Carousel = document.getElementById(id);
+    if (Carousel) {
+      let startX = 0;
+      let startY = 0;
+      let moveX = 0;
+      let moveY = 0;
+      Carousel.addEventListener('touchstart', e => {
+        startX = e.targetTouches[0]?.pageX;
+        startY = e.targetTouches[0]?.pageY;
+      });
+      Carousel.addEventListener(
+        'touchmove',
+        event => {
+          console.log(event);
+          moveX = event.targetTouches[0].pageX;
+          moveY = event.targetTouches[0].pageY;
+          // console.log(startX, startY, moveX, moveY);
+          if (Math.abs(moveX - startX) > Math.abs(moveY - startY)) {
+            event.preventDefault && event.preventDefault();
+          }
+        },
+        { passive: false },
+      );
+    }
+  }, []);
+}
