@@ -1,0 +1,113 @@
+浙里办应用上架审核时，埋点是必须的。
+埋点需要miniAppId 和 miniAppName，由项管提供。
+上代码，以下方法中需要修改miniAppId 、 miniAppName。 每个应用后端返回的userInfo中的字段可能不一样，使用的地方注意修改
+
+1. 埋点引入
+<script>
+    (function (w, d, s, q, i) {
+      w[q] = w[q] || [];
+      var f = d.getElementsByTagName(s)[0], j = d.createElement(s);
+      j.async = true;
+      j.id = 'beacon-aplus';
+      j.src = 'https://d.alicdn.com/alilog/mlog/aplus.js?id=202951085';
+      f.parentNode.insertBefore(j, f);
+    })(window, document, 'script', 'aplus_queue');
+
+    // 如果是私有云部署还需要在上面那段JS后面紧接着添加日志域名埋点
+    // 通常私有云日志服务端域名类似于：quickaplus-web-api.xxx.com.cn，具体
+    // 域名需找交付同学要
+    aplus_queue.push({ action: 'aplus.setMetaInfo', arguments: ['_hold', 'BLOCK'] });
+
+    aplus_queue.push({
+      action: 'aplus.setMetaInfo',
+      arguments: ['aplus-rhost-v', 'alog.zjzwfw.gov.cn']
+    });
+
+    aplus_queue.push({
+      action: 'aplus.setMetaInfo',
+      arguments: ['aplus-rhost-g', 'alog.zjzwfw.gov.cn']
+    });
+
+    // //这个会落到app_key字段上
+    aplus_queue.push({
+      action: 'aplus.setMetaInfo',
+      arguments: ['appId', '60506758']
+    });
+</script>
+
+2. 埋点方法封装，获取到用户信息时调用
+
+// 埋点
+export const sendPv = userInfo => {
+  const { userType, nickName, zlbUserId } = userInfo;
+  console.log('埋点用户名', nickName, zlbUserId);
+
+  window.ZWJSBridge.getLocation().then(res => {
+    const { longitude, latitude } = res;
+    window.aplus_queue.push({
+      action: 'aplus.setMetaInfo',
+      arguments: ['_hold', 'BLOCK'],
+    });
+
+    window.aplus_queue.push({
+      action: 'aplus.setMetaInfo',
+      arguments: ['aplus-rhost-v', 'alog.zjzwfw.gov.cn'],
+    });
+
+    window.aplus_queue.push({
+      action: 'aplus.setMetaInfo',
+      arguments: ['aplus-rhost-g', 'alog.zjzwfw.gov.cn'],
+    });
+
+    // 这个会落到app_key字段上
+    window.aplus_queue.push({
+      action: 'aplus.setMetaInfo',
+      arguments: ['appId', '60506758'],
+    });
+
+    window.aplus_queue.push({
+      action: 'aplus.setMetaInfo',
+      arguments: ['aplus-waiting', 'MAN'],
+    });
+
+    window.aplus_queue.push({
+      action: 'aplus.sendPV',
+      arguments: [
+        {
+          is_auto: false,
+        },
+        {
+          miniAppId: '20018xxxx',
+          miniAppName: 'xxxxx',
+          long: longitude,
+          lati: latitude,
+          userType,
+        },
+      ],
+    });
+
+    if (zlbUserId) {
+      // 设置会员昵称
+      // const nick =
+      //   loginType === 'zwfwCompany'
+      //     ? userInfo?.companyInfo?.companyName ?? userInfo?.userName
+      //     : userInfo.userInfo.username ?? userInfo.userInfo.loginname;
+      window.aplus_queue.push({
+        action: 'aplus.setMetaInfo',
+        arguments: ['_user_nick', nickName],
+      });
+      // 设置会员 ID
+      window.aplus_queue.push({
+        action: 'aplus.setMetaInfo',
+        arguments: [{ _user_id: zlbUserId }],
+      });
+      // 如采集用户信息是异步行为，需要在设置完用户信息后执行这个 START 埋点 // 此时被 block 住的日志会携带上用户信息逐条发出
+    }
+    setTimeout(() => {
+      window.aplus_queue.push({
+        action: 'aplus.setMetaInfo',
+        arguments: ['_hold', 'START'],
+      });
+    }, 0);
+  });
+};
