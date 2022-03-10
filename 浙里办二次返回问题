@@ -1,0 +1,10 @@
+export function toLogin() {
+  const pathname = bIsDtDreamApp
+    ? 'mobile.do?action=oauth'
+    : bIsAlipayMini
+    ? 'alipay.do?action=ssoLogin'
+    : 'usp.do?action=ssoLogin';
+  const url = `${config.loginUrl}/sso/${pathname}&scope=${config.scope}&servicecode=${config.servicecode}&goto=${config.redirectUrl}?source=zlb`;
+  console.log('登录跳转地址', url);
+  window.location.replace(url);  // 使用replace，就不会出现二次返回问题
+}
