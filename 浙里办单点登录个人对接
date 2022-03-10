@@ -1,0 +1,112 @@
+1. 浙里办单点登录个人对接
+
+通过重定向至浙里办单点登录回调地址，实现浙里办单点登录，该篇仅针对浙里办个人对接
+步骤：
+1. 进入我们应用重定向至政务网单点登录地址；
+2. 单点登录页面会判断用户登录状态，未登录，跳转至政务网登录界面；已登录，跳转至申请配置的浙里办回跳地址（后端申请，该回跳的地址一般为后端接口地址，处理浙里办返回的sp和ticket，接口会跳转到goto参数配置的页面地址，并在地址后拼接上ticket等参数）；
+3. 回跳至前端应用后，我们即可从url上取到ticket，以此来获取请求的accessToken；
+
+一、登录和注册使用政务服务网的界面。
+PC入口
+登录地址：https://puser.zjzwfw.gov.cn/sso/usp.do?action=ssoLogin&servicecode=【接入代码】
+注册地址：https://puser.zjzwfw.gov.cn/sso/usp.do?action=register&servicecode=【接入代码】
+修改密码：https://puser.zjzwfw.gov.cn/sso/usp.do?action=editPwd&servicecode=【接入代码】
+忘记密码：https://puser.zjzwfw.gov.cn/sso/usp.do?action=forgotPwd&servicecode=【接入代码】
+支付宝入口
+登陆地址：https://puser.zjzwfw.gov.cn/sso/alipay.do?action=ssoLogin&servicecode=【接入代码】
+APP入口
+登录地址：https://puser.zjzwfw.gov.cn/sso/mobile.do?action=oauth&scope=1&servicecode=【接入代码】&goto=【附带跳转地址，以sp参数返回】
+备注：pc入口如果使用了政务网的页头和页尾，登录地址请使用：https://puser.zjzwfw.gov.cn/sso/usp.do?action=ssoLogin&servicecode=njdh&goto=http%3a%2f%2fpuser.zjzwfw.gov.cn%2fsso%2fusp.do%3faction%3dzfRedirect%26servicecode%3d【接入代码】
+
+具体代码：
+判断应用登录状态，未登录且没有ticket时，调用toLogin() 跳转至浙里办单点登录
+useEffect(() => {
+    if (isLogin) {
+      init();
+    } else {
+      checkLogin();
+    }
+  }, [isLogin]);
+
+  const checkLogin = () => {
+    // console.log('checkLogin' + window.location.href);
+    const ticket = window.location.href.split('ticket=')?.[1]
+      ? window.location.href
+          .split('ticket=')?.[1]
+          .split('&')[0]
+          .split('#')[0]
+      : '';
+    // 带ticket, 获取用户类型查询token
+    if (ticket) {
+      dd.biz.user.getUserType({
+        onSuccess: function(data) {
+          console.log(data);
+          // 0 为公务员、1 为个人（除公务员）、2 为法人
+          const { userType: type } = data;
+          console.log('浙里办信息', data);
+          if (isLogin) {
+            init();
+          } else {
+            const payload = {
+              grantType: 'third_party',
+              loginType: type,
+              scope: 'all',
+              ssoToken: ticket,
+            };
+            dispatch({
+              type: 'login/fetchPublicToken',
+              payload,
+              callback: () => {
+                init();
+              },
+            });
+          }
+          dispatch({
+            type: 'login/setStateVal',
+            payload: { key: 'userType', val: type },
+          });
+        },
+        onFail: function(error) {
+          console.log('浙里办信息获取失败', error);
+          localStorage.setItem('accessToken', '');
+          // toLogin();
+          Toast.info('用户信息获取失败，请确认浙里办登录状态');
+        },
+      });
+    } else {
+      toLogin();
+      // dispatch({ type: 'login/setStateVal', payload: { isLogin: true } });
+    }
+  };
+  
+  utils 文件， toLogin 方法，地址区分pc端、浙里办、支付宝
+  import config from '@/utils/commonConfig';
+
+  const sUserAgent = navigator.userAgent.toLowerCase();
+  export const bIsDtDreamApp = sUserAgent.indexOf('dtdreamweb') > -1; // 浙里办APP
+  export const bIsAlipayMini =
+    sUserAgent.indexOf('miniprogram') > -1 && sUserAgent.indexOf('alipay') > -1; // 浙里办支付宝小程序
+
+  export function toLogin() {
+    const pathname = bIsDtDreamApp
+      ? 'mobile.do?action=oauth'
+      : bIsAlipayMini
+      ? 'alipay.do?action=ssoLogin'
+      : 'usp.do?action=ssoLogin';
+    const url = `${config.loginUrl}/sso/${pathname}&scope=${config.scope}&servicecode=${config.servicecode}&goto=${config.redirectUrl}`;
+    console.log('登录跳转地址', url);
+    window.location.href = url;
+  }
+  
+  commonConfig 文件
+  const config = {
+    loginUrl: 'https://puser.zjzwfw.gov.cn',
+    scope: '1',
+    servicecode: 'szshzhxt',
+    appId: '2001820367',
+    appName: '我的家园',
+    redirectUrl: window.location.href.split('?')[0].split('#')[0],
+  };
+
+
+  export default config;
