@@ -1,10 +1,24 @@
-export function toLogin() {
-  const pathname = bIsDtDreamApp
-    ? 'mobile.do?action=oauth'
-    : bIsAlipayMini
-    ? 'alipay.do?action=ssoLogin'
-    : 'usp.do?action=ssoLogin';
-  const url = `${config.loginUrl}/sso/${pathname}&scope=${config.scope}&servicecode=${config.servicecode}&goto=${config.redirectUrl}?source=zlb`;
-  console.log('登录跳转地址', url);
-  window.location.replace(url);  // 使用replace，就不会出现二次返回问题
+限制条件： 是浙里办应用的时候有效果
+// 浙里办
+export const watchApp = () => {
+  window?.addEventListener("pageshow", (event)=> {
+    if (event.persisted || ( window?.performance && window?.performance?.navigation.type == 2)) {
+      ZWJSBridge.close().then(()=> {
+        console.log('关闭')
+      })
+    }
+  })
+}
+
+// 支付宝
+export const watchAlipay = (callback) => {
+  window?.addEventListener("pageshow", (event)=> {
+    if (event?.persisted || (window.performance?.navigator?.type == 1 || window.performance?.navigator?.type == 0)) {
+      callback && callback()
+    } else if(event?.persisted || window?.performance && window.performance?.navigtion?.type == 2) {
+      my?.navigation()
+    } else {
+      my?.navigation()
+    }
+  })
 }
