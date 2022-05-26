@@ -1,0 +1,71 @@
+/**
+   * 多张图片并发上传控制规则
+   * 上传1-max数量的图片
+   * 设置一个最大上传数量
+   * 保证最大只有这个数量的上传请求
+*/
+  const fileFunc = async () => {
+    // 最多只有三个请求在上传
+    const maxSize = 3;
+    // 拿到一个二维数组
+    const chunkFiles = chunkFile(fileList, maxSize);
+    let count = 0, arr = [];
+    // 循环这个二维数组 得到下标和每一项
+    for (const [index, file] of chunkFiles.entries()) {
+      // 调用上传接口
+      const uploadFilePromise = file.map(item => {
+        count++;
+        return uploadFile(item, count)
+      });
+      const res = await Promise.all(uploadFilePromise);
+      for (const file of res) {
+        if ('error' in file) {
+          const files = fileList.filter((item, index) => index !== file.index);
+          setFileList(files);
+        } else {
+          arr.push(file.url);
+          setArrFile(arr);
+        }
+      }
+    }
+    // 调用提交数据接口
+    const result = await allSum();
+    if (result?.data?.success) {
+      Toast.success(result?.data?.data, 1);
+      history.goBack();
+      setArrFile([]);
+    } else {
+      Toast.fail(result?.data?.errorMsg, 1);
+    }
+  };
+  
+  // 上传图片 返回一个promise对象
+  const uploadFile = (item, index) => {
+    return new Promise(async (resolve, reject) => {
+      const res = await uploadFormDataPicture(item?.file);
+      if (res?.data?.success) {
+        resolve({ url: res?.data?.data, index })
+      } else {
+        resolve({ error: res?.data?.errorMsg, index })
+      }
+    });
+  }
+  
+  // 分组上传 将上传上来的图片分成一个二维数组
+  const chunkFile = (files, maxSize) => {
+    let array = [], subArray = [];
+
+    files.forEach((item, index) => {
+      if (subArray.length === maxSize) {
+        array.push(subArray);
+        subArray = [item];
+      } else {
+        subArray.push(item);
+      }
+
+      if (index === files.length - 1) {
+        array.push(subArray);
+      }
+    });
+    return array;
+  }
