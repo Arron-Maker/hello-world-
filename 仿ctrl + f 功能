@@ -1,0 +1,106 @@
+import { useState, useEffect } from 'react';
+import { getList } from '@/services/school';
+import { Serach } from '@/components';
+import { UpOutlined, DownOutlined } from '@ant-design/icons';
+import styles from './style.less';
+
+const GeneralAssembly = () => {
+
+  const [text, setText] = useState('');
+  const [content, setContent] = useState('');
+  const [index, setIndex] = useState(0);
+  const [count, setCount] = useState(0);
+
+  // 搜索时重新渲染并把index置为0
+  const onSearch = async (opt) => {
+    await getData();
+    setText(opt);
+    setIndex(0);
+  };
+
+  // 获取数据 
+  useEffect(() => {
+    getData();
+  }, []);
+
+  // 检索到内容时把数据处理显示在页面上
+  useEffect(() => {
+    if (text) {
+      setContent(brightKeyword(content));
+    }
+  }, [text]);
+
+  // 讲页面的检索到的全部内容replaceAll成带有html标签的文本
+  const brightKeyword = (val) => {
+    const reg = new RegExp(text.replace(/\s+/g, ''), 'gi');
+    const str = val?.match(reg);
+
+    setCount(str?.length ?? 0);
+    if (str?.length) {
+      const result = `<span class="result" style="background: yellow;">${str[index]}</span>`;
+      return (val = val.replaceAll(str[index], result));
+    }
+    return val;
+  };
+
+  const getData = async () => {
+    const res = await getList();
+    if (res?.success) {
+      const data = res?.data?.records?.[0]?.content;
+      setContent(data);
+    }
+  };
+
+ // 讲获取dom的操作 放在异步中 保证页面只有一个id
+ // 获取当前选中的位置 并滚动到这里
+  useEffect(() => {
+    setTimeout(() => {
+      const result = document.getElementsByClassName('result');
+      const scroll = document.getElementById('scroll');
+      const res = result?.[index];
+      console.log(res, result);
+      for (let i = 0; i < result.length; i++) {
+        result[i].removeAttribute('id');
+      }
+      res && res.setAttribute('id', styles.result);
+      if (res) {
+        const x = res.offsetTop;
+        scroll.scrollTop = x - 48;
+      }
+    }, 0);
+  }, [index, text]);
+
+  // 上下切换
+  const handleChange = (opt) => {
+    if (opt < 0) {
+      setIndex(count - 1);
+    } else if (opt >= count) {
+      setIndex(0);
+    } else {
+      setIndex(opt);
+    }
+  };
+
+  return (
+    <div className={styles.general_assembly}>
+      <header>
+        <Serach
+          serachBtn={false}
+          onSearch={onSearch}
+          index={count > 0 ? index + 1 : 0}
+          count={count}
+          showCount={text ? true : false}
+        />
+        {text && (
+          <div className={styles.icon_group}>
+            <UpOutlined onClick={() => handleChange(index - 1)} />
+            <DownOutlined onClick={() => handleChange(index + 1)} />
+          </div>
+        )}
+      </header>
+      <section id="scroll" dangerouslySetInnerHTML={{ __html: content }} />
+    </div>
+  );
+};
+
+export default GeneralAssembly;
