@@ -1,0 +1,29 @@
+// 获取视频第一帧
+// 有两种方式 一种是传file 另外一种是传url 都可以获取第一帧
+const getVideoCanvas = (file, url) => {
+  return new Promise(function (resolve, reject) {
+      const clientWidth = 100; //图片的宽
+      const clientHeight = 100; //图片的高
+      let video = document.createElement('video');
+      const videoUrl = file ? URL.createObjectURL(file) : url;
+      video.setAttribute('crossOrigin', 'anonymous'); //处理跨域
+      video.setAttribute('src', videoUrl);
+      video.setAttribute('width', clientWidth);
+      video.setAttribute('height', clientHeight);
+      video.setAttribute('playsInline', 'true');
+      video.setAttribute('muted', 'muted');
+      video.setAttribute('webkit-playsinline', 'true');
+      video.setAttribute('autoplay', 'autoplay'); // 自动播放
+      video.addEventListener('loadeddata', function () {
+      video.removeAttribute('autoplay');
+      let canvas = document.createElement('canvas');
+      canvas.width = clientWidth;
+      canvas.height = clientHeight;
+      canvas
+        .getContext('2d')
+        .drawImage(video, 0, 0, clientWidth, clientHeight); //绘制canvas
+      const url = canvas.toDataURL('image/jpeg');
+      resolve(url);
+    });
+  });
+};
