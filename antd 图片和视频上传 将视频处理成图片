@@ -1,0 +1,444 @@
+
+import { useState, useEffect } from 'react';
+import { history } from 'umi';
+import { Input, Button, Upload, Modal } from 'antd';
+import { dynamicAdd, getInfo, dynamicEdit } from '@/services/styleDisplay';
+import { uploadPicture, uploaVideo, getUrl } from '@/services/global';
+import { PlusOutlined, CloseOutlined } from '@ant-design/icons';
+import { Toast } from 'antd-mobile';
+import axios from 'axios';
+import storage from 'good-storage';
+import moment from 'moment';
+import { useSetZWTitle, useLoading } from '@/utils/hooks';
+import { USER_TOKEN } from '@/utils/constant';
+import styles from './style.less';
+
+const { TextArea } = Input;
+
+export default ({ location }) => {
+  const { id, flag } = location?.query;
+  const [textValue, setTextValue] = useState('');
+  const [fileList, setFileList] = useState([]);
+  const [title, setTitle] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [fileType, setFileType] = useState();
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewImage, setPreviewImage] = useState('');
+  const text = flag === 'add' ? '新增花絮' : '编辑花絮';
+
+  useSetZWTitle(text);
+  useLoading(loading);
+
+  useEffect(() => {
+    getInfo(id).then((res) => {
+      if (res?.success) {
+        const data = res?.data;
+        setTextValue(data?.content);
+        setTitle(data?.title);
+
+        const arr = data?.picVideo?.length
+          ? data?.picVideo?.split(',').map(async (item, key) => {
+              if (item?.indexOf('/video') !== -1) {
+                const res = await getVideoCanvas(null, item);
+                return {
+                  url: res,
+                  uid: key,
+                };
+              } else {
+                return {
+                  url: item,
+                  uid: key,
+                };
+              }
+            })
+          : [];
+        Promise.all(arr).then((res) => {
+          setFileList(res);
+        });
+      }
+    });
+  }, [id]);
+
+  // 正文
+  const handleText = (e) => {
+    setTextValue(e.target.value);
+  };
+  // 标题
+  const checkAccount = (e) => {
+    var text = e.target.value;
+    setTitle(text);
+  };
+  /**
+   * 多张图片并发上传控制规则
+   * 上传1-max数量的图片
+   * 设置一个最大上传数量
+   * 保证最大只有这个数量的上传请求
+   */
+  const fileFunc = async () => {
+    setLoading(true);
+    // 最多只有4个请求在上传
+    const maxSize = 4;
+    // 拿到一个二维数组
+    const chunkFiles = chunkFile(fileList, maxSize);
+    let count = 0,
+      arr = [];
+    // 循环这个二维数组 得到下标和每一项
+    for (const [index, file] of chunkFiles.entries()) {
+      // 调用上传接口
+      const uploadFilePromise = file.map((item) => {
+        count++;
+        return uploadFile(item, count);
+      });
+      const res = await Promise.all(uploadFilePromise);
+      for (const file of res) {
+        if ('error' in file) {
+          const files = fileList.filter((item, index) => index !== file.index);
+          setFileList(files);
+        } else {
+          arr.push(file.url);
+        }
+      }
+    }
+    const result = await allSum(arr);
+    setLoading(false);
+    if (result?.success) {
+      Toast.success(result?.data, 1);
+      history.goBack();
+    } else {
+      Toast.fail(result?.errorMsg, 1);
+    }
+  };
+
+  // 上传视频或图片
+  const uploadFile = (item, index) => {
+    return new Promise(async (resolve, reject) => {
+      if (item?.url) {
+        resolve({ url: item?.url, index });
+      } else {
+        const res =
+          item?.file?.type?.indexOf('image') !== -1
+            ? await getImageUrl(item?.file, item?.file?.name)
+            : await getVideoUrl(item?.file);
+        if (res?.success) {
+          resolve({ url: res?.data, index });
+        } else {
+          resolve({ error: res?.errorMsg, index });
+        }
+      }
+    });
+  };
+
+  // 获取图片链接
+  const getImageUrl = (file, name) => {
+    return new Promise(async (resolve, reject) => {
+      const res = await uploadPicture(file, name);
+      resolve({
+        success: true,
+        data: res?.data?.data,
+      });
+    });
+  };
+
+  // 获取视频链接
+  const getVideoUrl = (file) => {
+    return new Promise(async (resolve, reject) => {
+      // 视频上传
+      uploaVideo().then((res) => {
+        let ossConfig = {
+          policy: res?.data?.policy,
+          OSSAccessKeyId: res?.data?.accessid,
+          signature: res?.data?.signature,
+          url: res?.data?.host,
+          dir: res?.data?.dir,
+          ossProxy: res?.data?.ossProxy,
+        };
+        const photo = file; // 获取视频对象
+        const photoName =
+          moment().format('YYYYMMDDHHmmss') + '.' + photo?.name.split('.')[1]; // 原视频的名称
+        const key = ossConfig.dir + '/' + photoName; // 存储到oss的视频名称 自己定，必须确保唯一性，不然会覆盖oss中原有的文件   拼接:dir/账号/房间号/文件名(记住一定要加上dir拼接!!!!!!!!!)---不要问为什么 不加你会很惨
+        const policy = ossConfig.policy; // 服务器端同事调oss的API，通过接口返回给前端的 policy
+        const OSSAccessKeyId = ossConfig.OSSAccessKeyId; // 服务器端同事调oss的API，通过接口返回给前端的 OSSAccessKeyId
+        const signature = ossConfig.signature; // 服务器端同事调oss的API，通过接口返回给前端的 signature。这个就是签名，最关键的。
+        const url = ossConfig.ossProxy;
+        // biu一下，提交给oss
+        let param = {
+          name: photoName,
+          key,
+          policy: policy,
+          OSSAccessKeyId: OSSAccessKeyId,
+          success_action_status: '200', //必须这么写 不要问为什么
+          signature: signature,
+          file: photo, //一定在最后面
+        }; //顺序最好按照我写的  不要动位置 要不然不保证你能活着走下去..哈哈
+        const formData = new FormData(); //以表单的形式传递给oss
+        Object.keys(param).forEach((key) => {
+          formData.append(key, param[key]);
+        });
+        const token = storage.session.get(USER_TOKEN);
+        // 请求oss上传
+        axios(url, {
+          method: 'POST',
+          header: {
+            Authorization: token,
+            'Content-Type': 'multipart/form-data',
+          },
+          data: formData,
+        }).then(() => {
+          getUrl({ pathName: key }).then((res) => {
+            resolve({
+              success: true,
+              data: res?.data,
+            });
+          });
+        });
+      });
+    });
+  };
+
+  // 分组上传
+  const chunkFile = (files, maxSize) => {
+    let array = [],
+      subArray = [];
+
+    files.forEach((item, index) => {
+      if (subArray.length === maxSize) {
+        array.push(subArray);
+        subArray = [item];
+      } else {
+        subArray.push(item);
+      }
+
+      if (index === files.length - 1) {
+        array.push(subArray);
+      }
+    });
+    return array;
+  };
+
+  //调用发布风采接口
+  const allSum = (arrFile) => {
+    return new Promise((resolve, reject) => {
+      const params = {
+        content: textValue,
+        picVideo: arrFile?.join(','),
+        title,
+        id,
+      };
+      if (id) {
+        dynamicEdit(params).then((res) => {
+          if (res?.data?.success) {
+            resolve(res);
+          } else {
+            resolve(res);
+          }
+        });
+      } else {
+        dynamicAdd(params).then((res) => {
+          if (res?.data?.success) {
+            resolve(res);
+          } else {
+            resolve(res);
+          }
+        });
+      }
+    });
+  };
+
+  //点击提交
+  const btnClick = async () => {
+    if (textValue && title) {
+      await fileFunc();
+    } else {
+      Toast.fail('请填写后再提交!');
+    }
+  };
+
+  // 上传图片
+  const onChangePickerImg = ({ file }) => {
+    getVideoCanvas(file).then((res) => {
+      if (fileList?.length > 0) {
+        setFileList((pre) => {
+          return pre.concat({ file, thumbUrl: res });
+        });
+      } else {
+        setFileList([{ file, thumbUrl: res }]);
+      }
+    });
+  };
+
+  // 获取视频第一帧
+  const getVideoCanvas = (file, url) => {
+    return new Promise(function (resolve, reject) {
+      if (file?.type?.indexOf('video') !== -1 || url) {
+        const clientWidth = 100; //图片的宽
+        const clientHeight = 100; //图片的高
+        let video = document.createElement('video');
+        const videoUrl = file ? URL.createObjectURL(file) : url;
+        video.setAttribute('crossOrigin', 'anonymous'); //处理跨域
+        video.setAttribute('src', videoUrl);
+        video.setAttribute('width', clientWidth);
+        video.setAttribute('height', clientHeight);
+        video.setAttribute('playsInline', 'true');
+        video.setAttribute('muted', 'muted');
+        video.setAttribute('webkit-playsinline', 'true');
+        video.setAttribute('autoplay', 'autoplay');
+        video.addEventListener('loadeddata', function () {
+          video.removeAttribute('autoplay');
+          let canvas = document.createElement('canvas');
+          canvas.width = clientWidth;
+          canvas.height = clientHeight;
+          canvas
+            .getContext('2d')
+            .drawImage(video, 0, 0, clientWidth, clientHeight); //绘制canvas
+          const url = canvas.toDataURL('image/jpeg');
+          resolve(url);
+        });
+      } else {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+          let canvas = document.createElement('canvas');
+          //加载图片获取图片真实宽度和高度
+          const image = new Image();
+          image.src = reader.result;
+          image.onload = () => {
+            const clientWidth = image.width; //图片的宽
+            const clientHeight = image.height; //图片的高
+            canvas.width = clientWidth;
+            canvas.height = clientHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(image, 0, 0, clientWidth, clientHeight); //绘制canvas
+            const url = canvas.toDataURL('image/jpeg');
+            resolve(url);
+          };
+        };
+      }
+    });
+  };
+
+  // 删除
+  const handleDelete = (e, index) => {
+    e.stopPropagation();
+    setFileList((pre) => {
+      return pre.filter((item, key) => key !== index);
+    });
+  };
+
+  // 取消
+  const handleMiss = () => {
+    history.goBack();
+  };
+
+  // 预览
+  const handlePreview = (e, index) => {
+    e.stopPropagation();
+    const item = fileList?.[index];
+
+    if (id) {
+      if (item?.file?.indexOf('/video')) {
+        setFileType('video');
+      } else {
+        setFileType('image');
+      }
+      setPreviewImage(item?.url);
+    } else {
+      if (item?.file?.type?.indexOf('image') !== -1) {
+        setFileType('image');
+        setPreviewImage(item?.thumbUrl);
+      } else {
+        const videoUrl = URL.createObjectURL(item?.file);
+        setFileType('video');
+        setPreviewImage(videoUrl);
+      }
+    }
+    setPreviewVisible(true);
+  };
+
+  return (
+    <div className={styles['dynamic']}>
+      <main className={styles.main}>
+        <div className={styles['tel']}>
+          <label>标题:</label>
+          <Input
+            placeholder="请输入标题，20字以内"
+            maxLength={20}
+            onChange={(e) => {
+              checkAccount(e);
+            }}
+            value={title}
+          />
+        </div>
+        <div className={styles['content']}>
+          <div className={styles['title']}>
+            <span>内容:</span>
+          </div>
+          <div className={styles['textarea']}>
+            <TextArea
+              bordered={false}
+              style={{ border: 'none' }}
+              showCount
+              maxLength={500}
+              placeholder="请输入内容，500字以内"
+              onChange={(e) => {
+                handleText(e);
+              }}
+              value={textValue}
+            />
+          </div>
+        </div>
+        <div className={styles['pic']}>
+          <p>添加照片(选填，最多上传20张)</p>
+          <div>
+            {fileList?.map((item, index) => (
+              <div className={styles.img_content}>
+                <img
+                  src={item?.thumbUrl ?? item?.url}
+                  key={index}
+                  onClick={(e) => handlePreview(e, index)}
+                />
+                <p onClick={(e) => handleDelete(e, index)}>
+                  <CloseOutlined />
+                </p>
+              </div>
+            ))}
+            <Upload
+              accept="image/*,video/*"
+              beforeUpload={() => false}
+              listType="picture-card"
+              onChange={onChangePickerImg}
+              // showUploadList={ false }
+            >
+              {fileList.length >= 20 ? null : (
+                <div className="upload">
+                  <PlusOutlined
+                    style={{ fontSize: '30px', color: '#c5c5c5' }}
+                  />
+                </div>
+              )}
+            </Upload>
+          </div>
+        </div>
+      </main>
+      <div className={styles.footer}>
+        <div className={styles['btn']}>
+          <Button onClick={handleMiss}>取消</Button>
+        </div>
+        <div className={styles['btn']}>
+          <Button onClick={btnClick}>提交</Button>
+        </div>
+      </div>
+      <Modal
+        visible={previewVisible}
+        title=""
+        footer={null}
+        onCancel={() => setPreviewVisible(false)}
+      >
+        {fileType === 'image' ? (
+          <img style={{ width: '100%' }} src={previewImage} />
+        ) : (
+          <video src={previewImage} controls width="100%" height={400} />
+        )}
+      </Modal>
+    </div>
+  );
+};
