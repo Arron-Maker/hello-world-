@@ -1,0 +1,213 @@
+var callbacks = {}
+  
+class aiwz {
+  constructor() {
+    this.equipmentInfo = this.getOperationSys()
+    return {
+      device: {
+        notification: {
+          toast: this.toast.bind(this),
+          confirm: this.alert.bind(this)
+        },
+        connection: {
+          getWifiStatus: this.getWifiStatus.bind(this)
+        },
+        map: {
+          evokeNavigation: this.toMapNav.bind(this),
+          getGeolocation: this.getGeolocation.bind(this)
+        }
+      },
+      system: {
+        util: {
+          scan: this.scan.bind(this),
+          uploadFile: this.toUploadImage.bind(this),
+          saveFile: this.toSaveImage.bind(this)
+        },
+        telePhone: {
+          call: this.call.bind(this)
+        },
+        navigation: {
+          setTitle: this.setTitle.bind(this),
+          close: this.close.bind(this)
+        }
+      },
+      runtime: {
+        permission: {
+          requestAuthCode: this.requestAuthCode.bind(this)
+        }
+      },
+      receiveMessage: this.receiveMessage.bind(this)
+    }
+  }
+
+  getOperationSys() {
+    const UserAgent = navigator.userAgent.toLowerCase().toLowerCase()
+    return UserAgent.indexOf('android') > -1 ? "android" : "ios"
+  }
+
+  isFunction(fun) {
+    return typeof fun === 'function'
+  }
+
+  // toast 提示
+  toast(title) {
+    const content = title || '提示信息'
+    if ( this.equipmentInfo === "ios") {
+      this.invoke('toast', {text: content})
+    } else {
+      this.invoke('notification.toast', {text: content})
+    }
+  }
+
+  // 确定框
+  alert({ onSuccess }) {
+    const parameter = Object.assign({},
+      {
+        message: '确认取消吗',
+        title: "提示",
+        buttonLabels: ['是', '否'],
+      },
+    )
+
+    if ( this.equipmentInfo === "ios") {
+      this.invoke('confirm', parameter, onSuccess)
+    } else {
+      this.invoke('notification.confirm', parameter, onSuccess)
+    }
+  }
+
+  // 扫码
+  scan({ onSuccess }) {
+    const parameter = {
+      type: 'all',
+      action: "util.scan",
+    }
+    if ( this.equipmentInfo === "ios") {
+      this.invoke('scan', parameter, onSuccess)
+    } else {
+      this.invoke('util.scan', parameter, onSuccess)
+    }
+  }
+
+  // 拨打电话
+  call({ phone, onSuccess }) {
+    if ( this.equipmentInfo === "ios") {
+      this.invoke('call', { phone }, onSuccess)
+    } else {
+      this.invoke('telephone.call', { phone }, onSuccess)
+    }
+  }
+
+  // 修改当前标题
+  setTitle({ onSuccess, title }) {
+    if ( this.equipmentInfo === "ios") {
+      this.invoke('setTitle', { title }, onSuccess)
+    } else {
+      this.invoke('navigation.setTitle', { title }, onSuccess)
+    }
+  }
+
+  // 关闭当前页面
+  close({ data, onSuccess }) {
+    if ( this.equipmentInfo === "ios") {
+      this.invoke('close', { data }, onSuccess)
+    } else {
+      this.invoke('navigation.close', { data }, onSuccess)
+    }
+  }
+
+  // 获取网络类型
+  getWifiStatus({ onSuccess }) {
+    if ( this.equipmentInfo === "ios" ) {
+      this.invoke('getNetworkType', {}, onSuccess)
+    } else {
+      this.invoke('device.getNetworkType', {
+        "action": "getNetworkType"
+      }, onSuccess)
+    }
+  }
+
+  //位置信息
+  getGeolocation({ onSuccess }) {
+    if ( this.equipmentInfo === "ios" ) {
+      this.invoke('getGeolocation', {}, onSuccess)
+    } else {
+      this.invoke('geolocation.get', {
+        "action":"geolocation.get"
+      }, onSuccess)
+    }
+  }
+
+  // 保存图片
+  toSaveImage({ data, onSuccess }) {
+    if ( this.equipmentInfo === "ios" ) {
+      this.invoke('saveImage', { data }, onSuccess)
+    } else {
+      this.invoke('util.saveBase64Image', { data }, onSuccess)
+    }
+  }
+
+  //上传图片
+  toUploadImage({ onSuccess }) {
+    if ( this.equipmentInfo === "ios") {
+      this.invoke('uploadImage', {}, onSuccess)
+    } else {
+        this.invoke('util.uploadImage', {
+        "action":"util.uploadImage"
+        }, onSuccess)
+    }
+  }
+  // 导航唤起
+  toMapNav({ onSuccess, start, end }) {
+    if ( this.equipmentInfo === "ios") {
+      this.invoke('toMapNavi', { start, end }, onSuccess)
+    } else {
+      this.invoke('geolocation.navigation', { start, end }, onSuccess)         
+    }
+  }
+
+  // 通过鉴权实现免登
+  requestAuthCode({ appKey = '', onSuccess }) {
+    if ( this.equipmentInfo === "ios") {
+      this.invoke('requestAuthCode', { appKey }, onSuccess)
+    } else {
+      this.invoke('permission.requestAuthCode', { appKey }, onSuccess)         
+    }
+  }
+
+  // 调用 Native
+  invoke(callbackName, data, callback) {
+      if ( this.isFunction(callback) ) {
+        callbacks[callbackName+'Sucess'] = callback
+      }
+    if ( this.equipmentInfo === "ios") {
+      window.webkit.messageHandlers.invoke.postMessage({
+        callbackName: callbackName,
+        data: data || {}
+      })
+    } else if ( this.equipmentInfo === 'android') {
+      window.CityOS_JsBridge.nativeBridgeMethod(JSON.stringify({
+        callbackName: callbackName,
+        data: data || {}
+      }))
+    }
+  }
+
+  receiveMessage(msg) {
+    let bridgeName = msg.callbackName,
+        data = msg.data || {};
+    if (bridgeName) {
+      if (callbacks[bridgeName+'Sucess']) { // 找到相应句柄
+          callbacks[bridgeName+'Sucess'](data); // 执行调用
+      }
+    }
+  }
+}
+
+export default new aiwz()
+
+
+// 在入口文件或layout里注入window 才能让app那边调用到
+import aiwz from '../../public/csdn_api.js';
+
+ window.aiwz = aiwz;
