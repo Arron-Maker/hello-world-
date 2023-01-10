@@ -1,0 +1,221 @@
+1. 先申请高德地图和天地图的key 然后将两个地图都引入到项目内
+
+<script src="https://api.tianditu.gov.cn/api?v=4.0&tk=xxx" type="text/javascript"></script>
+<script src="//webapi.amap.com/maps?v=1.4.15&key=xxx"></script>
+
+2. 页面内创建两个地图容器 分别命名 并将类名为skyMap的元素隐藏 mapArea正常设置样式
+
+// 天地图
+<div className={styles.skyMap} id="skyMap" /> 
+// 高德地图
+<div className={styles.mapArea} id="mapContainer" /> 
+
+3. 创建地图实例
+
+// 天地图
+let map = null;
+let localsearch = null; // 搜索对象
+const T = window.T;
+
+// 高德地图
+let maps = {};
+const amapConfig = {
+  amapkey: 'xxx',
+  resizeEnable: true, //是否监控地图容器尺寸变化
+  version: '1.4.15',
+};
+
+// 高德地图是否加载完成
+const [complete, setComplete] = useState(false);
+
+useEffect(() => {
+  // 创建天地图实例
+  map = new T.Map('skyMap', {
+    projection: 'EPSG:4326',
+  });
+  
+  maps = new AMap.Map('mapContainer', amapConfig);
+  maps.setZoom(zoom);
+  // 地图加载完成
+  maps.on('complete', () => {
+    setComplete(true);
+  });
+}, []);
+
+4. 地图实例化完成后 获取当前位置（高德）并使用逆地理编码功能（天地图）
+
+import axios from 'axios';
+import coordtransform from 'coordtransform';
+
+useEffect(() => {
+  if (complete) {
+    // 清空地图上的覆盖物
+    clearAll();
+    
+    // 获取当前位置 
+    // 目前志愿浙江在浙里办环境下 当前位置会偏移近1公里的距离 可自行实现一个当前位置的点位标记
+    getPosition();
+    
+    // 将天地图的逆地理编码功能添加到高德地图上来
+    maps.on('click', function(e) {
+      // 将天地图的坐标系转换位高德的坐标系
+      const lnglat = coordtransform.gcj02towgs84(e?.lnglat?.lng, e?.lnglat?.lat);
+      // 调用天地图逆地理编码的接口
+      axios
+        .get(
+          `https://api.tianditu.gov.cn/geocoder?postStr={'lon':${lnglat?.[0]},'lat':${lnglat?.[1]},'ver':1}&type=geocode&tk=xxx`,
+        )
+        .then(res => {
+          searchResult(res?.data, e.lnglat);
+        });
+    });
+  }
+}, [complete])
+
+function searchResult({ result, status }, lnglat) {
+  clearAll();
+  if (status == 0) {
+    // 天地图
+    const address = result?.formatted_address
+    obj = {
+      lnglatXY: [lnglat?.lng, lnglat?.lat],
+      name: address,
+    };
+    setInputValue(address);
+
+    // 高德地图
+    const marker = new AMap.Marker({
+      position: [lnglat?.lng, lnglat?.lat],
+      anchor: 'bottom-center',
+      offset: new AMap.Pixel(0, 0),
+      icon: getIcon(),
+    });
+    maps.add(marker);
+  } else {
+    clearAll();
+  }
+}
+
+// 高德获取当前位置的定位
+const getPosition = () => {
+  AMap.plugin('AMap.Geolocation', function () {
+    var geolocation = new AMap.Geolocation({
+      buttonPosition: 'RB', //定位按钮的停靠位置
+      zoomToAccuracy: true, //定位成功后是否自动调整地图视野到定位点
+    });
+    map.addControl(geolocation);
+    geolocation.getCurrentPosition(function (status, result) {
+      if (status == 'complete') {
+        // 业务逻辑
+      } else {
+        console.log('定位失败', result);
+      }
+    });
+  });
+};
+
+
+// 点位标记
+const getIcon = (
+    width = 58,
+    height = 54,
+    image = icon_marker, // 图标的图片
+}) => {
+  const icon = new AMap.Icon({
+    size: new AMap.Size(width, height), // 图标尺寸
+    image, // Icon的图像
+    imageOffset: new AMap.Pixel(0, 0), // 图标偏移量
+    imageSize: new AMap.Size(width, height), // 图标所用图片大小
+  });
+  return icon;
+}
+
+// 清空地图覆盖物
+const clearAll = () => {
+  map && map.clearOverLays();
+  maps && maps.clearMap();
+};
+
+5. 天地图搜索
+
+import { Input } from 'antd';
+import throttle from 'lodash/throttle';
+import coordtransform from 'coordtransform'; // 坐标系转换
+
+// 搜索框的值
+const [inputValue, setInputValue] = useState();
+// 搜索结果
+const [addressList, setAddressList] = useState([]);
+
+// 搜索框
+<Input
+  className={styles.mapInput}
+  type="text"
+  placeholder="请输入地址"
+  onPressEnter={e => getSearch(e?.target?.value)}
+  onChange={throttle(getSearchValue, 1000)}
+  value={inputValue}
+  allowClear
+/>
+
+const getSearchValue = e => {
+  setInputValue(e?.target?.value);
+  
+  // 没有内容时清空点位标记
+  if (e?.target?.value == '') {
+    clearAll();
+  }
+};
+
+// 搜索功能 
+const getSearch = value => {
+  if (value) {
+    const config = {
+      pageCapacity: 3, //每页显示的数量
+      onSearchComplete: localSearchResult, //接收数据的回调函数
+    };
+    //创建搜索对象 分页数据都在这里边 
+    localsearch = new T.LocalSearch(map, config);
+    // 解析点数据类型
+    localsearch.search(value, 1);
+
+    // 解析点数据结果 1 - getPois
+    // 解析推荐城市 2 - getStatistics
+    // 解析行政区划边界 3 - getArea
+    // 解析建议词信息 4 - getSuggests
+    // 解析公交信息 5 - getLineData
+
+    // 根据业务需要选择 也可以根据result的类型 使用switch根据返回类型解析搜索结果
+    function localSearchResult(result) {
+      //解析点数据信息
+      suggests(result.getPois());
+    }
+  
+    //解析点数据信息
+    function suggests(obj) {
+      if (obj && obj.length) {
+        
+        setAddressList(
+          obj?.map(item => {
+            // 这里就是天地图的的经纬度了 需要转成高德的坐标
+            const lonlat = item?.lonlat.split(' ');
+            return {
+              ...item,
+              lonlat: coordtransform.wgs84togcj02(lonlat?.[0], lonlat?.[1]),
+            };
+          }),
+        );
+      } else {
+        // 没有搜索结果的处理逻辑
+      }
+    }
+  } else {
+    setAddressList([]);
+    clearAll();
+  }
+};
+
+// 获取到搜索结果后的逻辑
+useEffect(() => {
+  // 比如 渲染点位标记、搜索列表等等
+}, [addressList])
