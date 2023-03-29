@@ -1,0 +1,46 @@
+// 唤起app导航,type:0 高德 1 百度 2 苹果
+export const openAmap = ({ latitude, longitude, poiname, type }) => {
+  const { userAgent } = window.navigator;
+  const isAndroid =
+    userAgent.indexOf('Android') > -1 ||
+    userAgent.indexOf('Adr') > -1 ||
+    userAgent.indexOf('Linux') > -1;
+  const isIOS = !!userAgent.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/);
+  const coords = localStorage.getItem('coords') || '';
+  let url = '';
+  if (isAndroid) {
+    //这个是安卓操作系统
+    switch (+type) {
+      case 0:
+        url = `https://uri.amap.com/navigation?from=${coords},我的位置&to=${longitude},${latitude},${poiname}&mode=driving&policy=1&src=mypage&coordinate=gaode&callnative=1`;
+        break;
+      case 1:
+        url = `http://api.map.baidu.com/marker?location=${latitude},${longitude}&title=${poiname}&content=${poiname}&coord_type=gcj02&output=html`;
+        break;
+      case 2:
+        url = '';
+        break;
+      default:
+        url = '';
+    }
+  }
+  if (isIOS) {
+    //这个是ios操作系统
+    switch (+type) {
+      case 0:
+        // url = `iosamap://navi?sourceApplication=amap&amp;poiname=${poiname}&lat=${latitude}&lon=${longitude}&dev=1&style=1`;
+        url = `https://uri.amap.com/navigation?from=${coords},我的位置&to=${longitude},${latitude},${poiname}&mode=driving&policy=1&src=mypage&coordinate=gaode&callnative=1`;
+        break;
+      case 1:
+        url = `http://api.map.baidu.com/marker?location=${latitude},${longitude}&title=${poiname}&content=${poiname}&coord_type=gcj02&output=html`;
+        break;
+      case 2:
+        url = '';
+        break;
+      default:
+        url = '';
+    }
+  }
+
+  window.open(url);
+};
