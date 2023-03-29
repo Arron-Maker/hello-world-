@@ -1,115 +1,160 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { message } from 'antd';
-import Editor from 'wangeditor';
-import { uploadCover } from '@/services/contentPublish/newManagement'; // 接口
-import './style.less'
+import request from '@/utils/request';
+import { uploadImg, uploaVideo, getUrl } from '@/services/global';
+import moment from 'moment'
+import BraftEditor from 'braft-editor'
+import 'braft-editor/dist/index.css'
+import { newDbRequest } from '@/utils/request';
 
-const EditorComp = ({ onChange, value = '', disabled = true, flag }) => {
-  const editorElem = useRef();
+const EditorComp = ({ value = '', disabled = true, saveDetails }) => {
   const [editor, setEditor] = useState(null);
 
-  const initEditor = () => {
-    const elem = editorElem.current;
-    const editorE = new Editor(elem);
-    editorE.customConfig.zIndex = 100;
-    // editor.customConfig.uploadImgServer = utils.url + '/fileclient-management/api/uploadpic';
-    // 限制一次最多上传 1 张图片
-    editorE.customConfig.uploadImgMaxLength = 1
-    editorE.customConfig.customUploadImg = async (files, insert) => {
-      // files 是 input 中选中的文件列表
-      if (files[0]) {
-        const formData = new window.FormData();
-        formData.append('file', files[0])
-        const res = await uploadCover(formData);
-        if (res.success) {
-          insert(res.data)
-        }
-      } else {
-        message.info('请选择要上传的图片');
-      }
+  const myValidateFn = (file) => {
+    const isLt100M = file.size < 100 * 1024 * 1024;
+    if (!isLt100M) {
+      message.warning(`视频大于${100}M请重新上传`);
     }
-    editorE.customConfig.menus = flag === 'detail' ? [] : [
-      'undo', // 撤销
-      'redo', // 重复
-      'head', // 标题
-      'bold', // 粗体
-      'fontSize', // 字号
-      // 'fontName', // 字体
-      'italic', // 斜体
-      'underline', // 下划线
-      'strikeThrough', // 删除线
-      'foreColor', // 文字颜色
-      'backColor', // 背景颜色
-      'justify', // 对齐方式
-      'list', // 列表
-      'link', // 插入链接
-      // 'quote', // 引用
-      // 'emoticon', // 表情
-      'image', // 插入图片
-      'table', // 表格
-      // 'video', // 插入视频
-      // 'code', // 插入代码
-    ]
-    editorE.customConfig.lang = {
-      '设置标题': 'Title',
-      '字号': 'Size',
-      '文字颜色': 'Color',
-      '设置列表': 'List',
-      '有序列表': '',
-      '无序列表': '',
-      '对齐方式': 'Align',
-      '靠左': '',
-      '居中': '',
-      '靠右': '',
-      '正文': 'p',
-      '链接文字': 'link text',
-      '链接': 'link',
-      '上传图片': 'Upload',
-      '网络图片': 'Web',
-      '图片link': 'image url',
-      '插入视频': 'Video',
-      '格式如': 'format',
-      '上传': 'Upload',
-      '创建': 'init'
-    }
+    return isLt100M
+  }
 
-    editorE.customConfig.onchange = html => {
-      // html 即变化之后的内容
-      onChange(html);
+  const myUploadFn = async (params) => {
+    if (params.file.type.indexOf("video") != -1) {
+      const isLt100M = params.file.size > 100 * 1024 * 1024;
+      if (isLt100M) {
+        message.warning(`视频大于${100}M请重新上传`);
+        params.warning({
+          url: ''
+        })
+        return
+      }
+      myUploadVideo(params)
+      return
     }
-    editorE.disabled = disabled
-    editorE.create();
-    setEditor(editorE);
-    editorE.$textElem.attr('contenteditable', disabled)
+    const formData = new window.FormData();
+    formData.append('file', params.file)
+    const res = await uploadImg(formData);
+    if (res.success) {
+      const address = window?.cache?.[3]; // oss地址前缀
+      const url = await getImgUrl(res?.data?.slice(address?.length));
+
+      params.success({
+        url: url?.data,
+        meta: {
+          id: 'xxx',
+          title: 'xxx',
+          alt: 'xxx',
+        }
+      })
+    }
+  }
+
+  const myUploadVideo = async (params) => {
+
+    const res = await uploaVideo();
+    let ossConfig = {
+      policy: res.data.policy,
+      OSSAccessKeyId: res.data.accessid,
+      signature: res.data.signature,
+      url: res.data.host,
+      dir: res.data.dir,
+      ossProxy: res.data?.ossProxy,
+    };
+    const photo = params.file;  // 获取视频对象
+    const photoName = moment().format('YYYYMMDDHHmmss') + '.' + photo?.name.split(".")[1];  // 原视频的名称
+    const key = ossConfig.dir + '/' + photoName;  // 存储到oss的视频名称 自己定，必须确保唯一性，不然会覆盖oss中原有的文件   拼接:dir/账号/房间号/文件名(记住一定要加上dir拼接!!!!!!!!!)---不要问为什么 不加你会很惨
+    const policy = ossConfig.policy; // 服务器端同事调oss的API，通过接口返回给前端的 policy
+    const OSSAccessKeyId = ossConfig.OSSAccessKeyId;  // 服务器端同事调oss的API，通过接口返回给前端的 OSSAccessKeyId
+    // const callback = ossConfig.callback;  // 服务器端同事调oss的API，通过接口返回给前端的 callback。这个是需要 oss 触发这个回调来通知服务器操作结果。
+    const signature = ossConfig.signature;  // 服务器端同事调oss的API，通过接口返回给前端的 signature。这个就是签名，最关键的。
+    const url = ossConfig.ossProxy;
+    const ossProxy = ossConfig.ossProxy;
+    const dir = ossConfig.dir;
+    // biu一下，提交给oss
+    let param = {
+      name: photoName,
+      key,
+      policy,
+      OSSAccessKeyId,
+      success_action_status: '200',  //必须这么写 不要问为什么
+      signature,
+      ossProxy,
+      file: photo   //一定在最后面
+    };  //顺序最好按照我写的  不要动位置 要不然不保证你能活着走下去..哈哈
+    const formData = new FormData();  //以表单的形式传递给oss
+    Object.keys(param).forEach((key) => {
+      formData.append(key, param[key]);
+    });
+    // 请求oss上传
+    newDbRequest(url, {
+      method: 'POST',
+      headers: {
+      },
+      body: formData,
+    }).then(async () => {
+      const urls = await getUrl(key);
+      if (urls.success) {
+        params.success({
+          url: urls?.data,
+          meta: {
+            id: 'xxx',
+            title: 'xxx',
+            alt: 'xxx',
+          }
+        })
+      }
+    })
+  }
+
+  const getImgUrl = (url) => {
+    return request(`/upload/getURL?pathName=${url}`, {
+      method: 'POST'
+    })
   }
 
   useEffect(() => {
-    initEditor();
-  }, []);
+    setEditor(BraftEditor.createEditorState(value));
+  }, [value]);
 
+  return (<>
+    <div style={{ border: "1px solid #e8e8e8" }}>
+      <BraftEditor
+        value={editor}
+        readOnly={disabled}
+        onChange={(opt) => {
+          const innerHtml = opt.toHTML();
+          setEditor(innerHtml)
+          saveDetails(innerHtml)
+        }}
+        media={{
+          uploadFn: myUploadFn,
+          validateFn: myValidateFn
 
-  useEffect(() => {
-    if (editor !== null) {
-      editor.txt.html(value)
-    }
-  }, [value, editor]);
-
-  return (
-    <div ref={editorElem} style={{ textAlign: 'left', background: `${disabled ? '' : '#eee'}` }} />
+        }}
+      />
+    </div>
+  </>
   )
 }
 
-export default EditorComp;、
+export default EditorComp;
 
-.w-e-toolbar{
-    flex-wrap: wrap !important;
-}
 
-.w-e-text{
-    >p{
-        >img{
-            width: 100%;
-            height: 300px;
-        }
-    }
-}
+
+<Form.Item
+  label="内容"
+  name="content"
+  rules={[
+    {
+      validator: (_, value) =>
+        content ? Promise.resolve() : Promise.reject(new Error('内容不能为空')),
+    },
+  ]}
+>
+  <Editors
+    disabled={flag === 'detail'}
+    saveDetails={opt => {
+      setContent(opt);
+    }}
+  />
+</Form.Item>
