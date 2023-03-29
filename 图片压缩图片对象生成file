@@ -1,0 +1,59 @@
+/**
+ * @name 文件压缩
+ * @description
+ *  1、将文件转img对象
+ *  2、获取文件宽高比例
+ *  3、自定义等比例缩放宽高属性，这里我用的是固定800宽度，高度是等比例缩放
+ *  4、canvas重新绘制图片
+ *  5、canvas转二进制对象转文件对象，返回
+ * @returns { File } 文件
+ */
+export async function imgCompress ({ file }) {
+  // 将文件转img对象
+  const img = await fileToImg(file)
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement('canvas')
+    const context = canvas.getContext('2d')
+    // 获取文件宽高比例
+    const { width: originWidth, height: originHeight } = img
+    // 自定义等比例缩放宽高属性，这里我用的是固定800宽度，高度是等比例缩放
+    const scale = +(originWidth / originHeight).toFixed(2) // 比例取小数点后两位)
+    const targetWidth = 800 // 固定宽
+    const targetHeight = Math.round(targetWidth / scale) // 等比例缩放高
+ 
+    canvas.width = targetWidth
+    canvas.height = targetHeight
+    context.clearRect(0, 0, targetWidth, targetHeight)
+    // canvas重新绘制图片
+    context.drawImage(img, 0, 0, targetWidth, targetHeight)
+    // canvas转二进制对象转文件对象，返回
+    const type = 'image/png'
+    canvas.toBlob(function (blob) {
+      const f = new File([blob], '1.png', {
+        type,
+      })
+      resolve(f)
+    }, type)
+  })
+}
+ 
+// file转换成img对象
+function fileToImg (file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const reader = new FileReader()
+    reader.onload = function (e) {
+      img.src = e.target.result
+    }
+    reader.onerror = function (e) {
+      reject(e)
+    }
+    reader.readAsDataURL(file)
+    img.onload = function () {
+      resolve(img)
+    }
+    img.onerror = function (e) {
+      reject(e)
+    }
+  })
+}
