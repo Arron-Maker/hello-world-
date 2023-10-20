@@ -1,0 +1,105 @@
+
+
+前置任务：
+1. 开通微信认证和微信支付才能插入外链
+2. 认证服务号才能网页授权域名或很早以前申请的订阅号
+3. 配置业务域名、js接口安全域名、网页授权域名（需要与回调地址域名一致）
+  fljgh.thecityos.com
+  jinguozy.gzwomen.org.cn/resource
+
+代码：
+第一步 获取code 通过code置换access_token等信息并缓存 获取code成功后需要存储标记判断 因为会一直重定向
+
+* // 获取登录需要的code
+* const oauthLogin = () => {
+*   const { appid } = config;
+*   const redirect_url = encodeURIComponent(
+*     `${location.origin}/resource/h5/#/login/wxLogin`,
+*   );
+*   location.href = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appid}&redirect_uri=${redirect_url}&response_type=code&scope=snsapi_userinfo&state=STATE#wechat_redirect`;
+* };
+
+// 重定向页面
+*const code = getUrlParams('code');
+*  const dispatch = useDispatch();
+*  const { wxCode } = useSelector(state => state.login);
+
+*  useEffect(() => {
+*    code && getAccessToken();
+*  }, []);
+
+*  // 获取access_token
+*  const getAccessToken = () => {
+*    if (wxCode != code) {
+*      dispatch({
+*        type: 'login/setStateVal',
+*        payload: { wxCode: code },
+*      });
+
+*      isHaveAssociation();
+*    }
+* };
+
+*// 是否绑定过用户关联关系
+*const isHaveAssociation = async () => {
+*  // 获取加密需要的公钥
+*  dispatch({
+*    type: 'login/getPublicKey',
+*    callback: async (res, data) => {
+*      if (res) {
+*        let encrypt = new JSEncrypt();
+*        encrypt.setPublicKey(data);
+
+*        const result = await getIsBindUser({ code: encrypt.encrypt(code) });
+*        if (result?.data?.success) {
+*          const { tag, token, expireIn, openId } = result?.data?.data;
+
+*          // 解绑的时候需要用到 所以全局缓存一下 建议解绑时保留 也可多页面传递
+*          localStorage.setItem('openId', openId);
+
+*          // 有绑定过信息就缓存数据 并更新登录状态
+*          if (tag == 2) {
+*            storage.setItem({
+*              name: 'accessToken',
+*              value: token,
+*              expires: expireIn && expireIn * 1000,
+*            });
+*            dispatch({
+*              type: 'login/setStateVal',
+*              payload: {
+*                isLogin: true,
+*                accessToken: token,
+*              },
+*            });
+
+*           // 配置的是首页地址 所以在没有重定向的时候跳转到首页
+*            !sessionStorage.getItem('redirect') && history.replace('/')
+            // 重定向标记 以此来阻止微信无限重定向跳转
+*            sessionStorage.setItem('redirect', true);
+*          } else {
+            // 没有绑定过信息就带至登录页进行绑定
+*            sessionStorage.setItem('redirect', true);
+*            history.replace(`/login?openId=${openId}`);
+*          }
+*        } else {
+*          Toast.fail(result?.data?.success, 2);
+*        }
+*      } else {
+*        Toast.fail(data, 2);
+*      }
+*    },
+*  });
+*};
+
+
+* // 解绑
+*const res = await getLogout();
+*if(res?.data?.success){
+*  history.replace(`/login?openId=${openId}`);
+*  Toast.success(res?.data?.data ?? '退出成功', 1, () => {
+*    localStorage.clear();
+*    sessionStorage.clear();
+*  });
+*} else {
+*  Toast.fail(res?.data?.errorMsg, 2);
+*}
